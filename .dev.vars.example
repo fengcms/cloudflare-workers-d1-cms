@@ -1,0 +1,7 @@
+# JWT Configuration
+JWT_SECRET=your-secret-key-change-this-in-production
+JWT_EXPIRATION=7d
+
+# Optional Configuration
+MAX_UPLOAD_SIZE=5242880
+CACHE_TTL=300

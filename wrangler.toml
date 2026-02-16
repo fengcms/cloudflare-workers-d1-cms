@@ -1,0 +1,68 @@
+name = "cloudflare-cms-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding (top-level for migrations)
+[[d1_databases]]
+binding = "DB"
+database_name = "cms_development"
+database_id = "local"
+migrations_dir = "drizzle/migrations"
+
+# Development environment (default)
+[env.development]
+vars = { ENVIRONMENT = "development" }
+
+# R2 Bucket binding for development
+[[env.development.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "cms-images-development"
+
+# KV Namespace binding for development
+[[env.development.kv_namespaces]]
+binding = "CACHE"
+id = "local"
+
+# R2 Bucket binding for development
+[[env.development.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "cms-images-development"
+
+# KV Namespace binding for development
+[[env.development.kv_namespaces]]
+binding = "CACHE"
+id = "local"
+
+# Staging environment
+[env.staging]
+vars = { ENVIRONMENT = "staging" }
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "cms_staging"
+database_id = "<staging-db-id>"
+
+[[env.staging.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "cms-images-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "CACHE"
+id = "<staging-kv-id>"
+
+# Production environment
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "cms_production"
+database_id = "<production-db-id>"
+
+[[env.production.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "cms-images-production"
+
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "<production-kv-id>"

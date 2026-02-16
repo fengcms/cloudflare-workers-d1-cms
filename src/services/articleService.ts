@@ -75,7 +75,7 @@ export class ArticleService {
         editor_id: data.editor_id ?? null,
         user_id: userId,
         type: data.type ?? ArticleTypeEnum.NORMAL,
-        status: StatusEnum.PENDING,
+        status: StatusEnum.NORMAL,
         is_top: data.is_top ?? 0,
         site_id: siteId,
         created_at: now,

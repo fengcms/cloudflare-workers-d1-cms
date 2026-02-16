@@ -182,11 +182,15 @@ async function recordAuditLog(c: Context, logType: LogTypeEnum): Promise<void> {
     const userAgent = c.req.header('User-Agent') || ''
     
     // 获取数据库实例
-    const db = c.env?.DB
-    if (!db) {
+    const rawDb = c.env?.DB
+    if (!rawDb) {
       console.error('数据库未配置，无法记录审计日志')
       return
     }
+    
+    // 创建 drizzle 实例
+    const { drizzle } = await import('drizzle-orm/d1')
+    const db = drizzle(rawDb)
     
     // 创建审计日志服务实例
     const auditLogService = new AuditLogService(db)

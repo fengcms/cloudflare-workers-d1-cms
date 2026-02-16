@@ -58,7 +58,7 @@ export class ChannelService {
         keywords: data.keywords ?? '',
         description: data.description ?? '',
         type: data.type ?? ChannelTypeEnum.ARTICLE,
-        status: StatusEnum.PENDING,
+        status: StatusEnum.NORMAL,
         img: data.img ?? '',
         site_id: siteId,
         created_at: now,

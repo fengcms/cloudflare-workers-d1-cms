@@ -39,6 +39,22 @@ export class PromoService {
   async create(data: CreatePromoInput, siteId: number): Promise<Promo> {
     const now = new Date()
 
+    // 转换时间戳为 Date 对象（如果是数字）
+    let startTime: Date | null = null
+    let endTime: Date | null = null
+
+    if (data.start_time !== undefined && data.start_time !== null) {
+      startTime = typeof data.start_time === 'number' 
+        ? new Date(data.start_time * 1000) 
+        : data.start_time
+    }
+
+    if (data.end_time !== undefined && data.end_time !== null) {
+      endTime = typeof data.end_time === 'number' 
+        ? new Date(data.end_time * 1000) 
+        : data.end_time
+    }
+
     // 插入推广记录
     const [result] = await this.db
       .insert(promos)
@@ -48,8 +64,8 @@ export class PromoService {
         url: data.url ?? '',
         position: data.position ?? '',
         content: data.content ?? '',
-        start_time: data.start_time ?? null,
-        end_time: data.end_time ?? null,
+        start_time: startTime,
+        end_time: endTime,
         sort: data.sort ?? 0,
         status: StatusEnum.NORMAL,
         site_id: siteId,
@@ -106,8 +122,16 @@ export class PromoService {
     if (data.url !== undefined) updateData.url = data.url
     if (data.position !== undefined) updateData.position = data.position
     if (data.content !== undefined) updateData.content = data.content
-    if (data.start_time !== undefined) updateData.start_time = data.start_time
-    if (data.end_time !== undefined) updateData.end_time = data.end_time
+    if (data.start_time !== undefined) {
+      updateData.start_time = typeof data.start_time === 'number' 
+        ? new Date(data.start_time * 1000) 
+        : data.start_time
+    }
+    if (data.end_time !== undefined) {
+      updateData.end_time = typeof data.end_time === 'number' 
+        ? new Date(data.end_time * 1000) 
+        : data.end_time
+    }
     if (data.sort !== undefined) updateData.sort = data.sort
     if (data.status !== undefined) updateData.status = data.status
 

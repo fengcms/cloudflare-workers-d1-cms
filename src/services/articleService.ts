@@ -27,16 +27,19 @@ export class ArticleService {
    * 创建文章
    * 
    * 验证关联的频道在相同 site_id 下存在且未被删除。
-   * 自动设置 status 为 PENDING，记录创建时间。
+   * 根据用户权限自动设置 status：
+   * - USER 权限：默认 PENDING（待审核）
+   * - EDITOR、MANAGE、SUPERMANAGE 权限：默认 NORMAL（正常）
    * 
    * @param data - 文章创建数据
    * @param siteId - 站点ID
    * @param userId - 创建用户ID
+   * @param userType - 用户权限类型
    * @returns 创建的文章
    * 
    * **验证需求**: 2.1, 2.2
    */
-  async create(data: CreateArticleInput, siteId: number, userId: number): Promise<Article> {
+  async create(data: CreateArticleInput, siteId: number, userId: number, userType: string): Promise<Article> {
     // 验证频道存在且属于相同站点
     const channel = await this.db
       .select()
@@ -55,6 +58,11 @@ export class ArticleService {
     }
 
     const now = new Date()
+
+    // 根据用户权限设置默认状态
+    // USER 权限：默认 PENDING（待审核）
+    // EDITOR、MANAGE、SUPERMANAGE 权限：默认 NORMAL（正常）
+    const defaultStatus = userType === 'USER' ? StatusEnum.PENDING : StatusEnum.NORMAL
 
     // 插入文章记录
     const [result] = await this.db
@@ -75,7 +83,7 @@ export class ArticleService {
         editor_id: data.editor_id ?? null,
         user_id: userId,
         type: data.type ?? ArticleTypeEnum.NORMAL,
-        status: StatusEnum.NORMAL,
+        status: defaultStatus,
         is_top: data.is_top ?? 0,
         site_id: siteId,
         created_at: now,

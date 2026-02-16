@@ -35,7 +35,11 @@ const articles = new Hono()
 
 /**
  * POST /api/v1/articles
- * 创建文章（需要 EDITOR 或更高权限）
+ * 创建文章（需要认证）
+ * 
+ * 权限说明：
+ * - USER 权限：可以创建文章，默认状态为 PENDING（待审核）
+ * - EDITOR、MANAGE、SUPERMANAGE 权限：可以创建文章，默认状态为 NORMAL（正常）
  * 
  * 请求体：CreateArticleInput
  * 
@@ -47,10 +51,9 @@ articles.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Co
   const authContext = getAuthContext(c)
   const { siteId } = getSiteContext(c)
 
-  // 检查权限：需要 EDITOR 或更高权限
-  if (!checkPermission(authContext.type, UserTypeEnum.EDITOR)) {
-    throw new AuthorizationError('权限不足，需要 EDITOR 或更高权限')
-  }
+  // 所有认证用户都可以创建文章
+  // USER 权限创建的文章默认为 PENDING 状态
+  // EDITOR 及以上权限创建的文章默认为 NORMAL 状态
 
   // 获取请求体
   const body = await c.req.json() as CreateArticleInput
@@ -68,8 +71,8 @@ articles.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Co
   const db = drizzle(c.env.DB)
   const articleService = new ArticleService(db)
 
-  // 创建文章
-  const article = await articleService.create(body, siteId, authContext.userId)
+  // 创建文章，传递用户权限类型
+  const article = await articleService.create(body, siteId, authContext.userId, authContext.type)
 
   return c.json(successResponse(article), 201)
 })

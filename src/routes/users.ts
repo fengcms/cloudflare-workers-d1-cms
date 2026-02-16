@@ -16,6 +16,7 @@
 
 import { Hono } from 'hono'
 import type { Context } from 'hono'
+import { drizzle } from 'drizzle-orm/d1'
 import { UserService } from '../services/userService'
 import { authMiddleware, getAuthContext } from '../middleware/auth'
 import { siteMiddleware, getSiteContext } from '../middleware/site'
@@ -23,9 +24,9 @@ import { checkPermission } from '../utils/authorization'
 import { successResponse } from '../utils/response'
 import { 
   AuthorizationError, 
-  ValidationError, 
-  NotFoundError 
+  ValidationError 
 } from '../errors'
+import { generateToken } from '../utils/jwt'
 import { 
   UserTypeEnum, 
   CreateUserInput, 
@@ -63,8 +64,7 @@ users.post('/register', siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const userService = new UserService(
-    c.env.DB,
+  const db = drizzle(c.env.DB); const userService = new UserService(db,
     c.env.JWT_SECRET,
     c.env.JWT_EXPIRATION || '7d'
   )
@@ -76,12 +76,16 @@ users.post('/register', siteMiddleware, async (c: Context) => {
   }, siteId)
 
   // 自动登录，生成 token
-  const token = await userService.generateToken({
-    userId: user.id,
-    username: user.username,
-    type: user.type,
-    siteId: user.site_id
-  })
+  const token = await generateToken(
+    {
+      userId: user.id,
+      username: user.username,
+      type: user.type as UserTypeEnum,
+      siteId: user.site_id
+    },
+    c.env.JWT_SECRET,
+    c.env.JWT_EXPIRATION || '7d'
+  )
 
   return c.json(successResponse({
     token,
@@ -116,8 +120,7 @@ users.post('/login', siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const userService = new UserService(
-    c.env.DB,
+  const db = drizzle(c.env.DB); const userService = new UserService(db,
     c.env.JWT_SECRET,
     c.env.JWT_EXPIRATION || '7d'
   )
@@ -140,8 +143,7 @@ users.post('/login', siteMiddleware, async (c: Context) => {
  */
 users.get('/login/nonce', async (c: Context) => {
   // 创建用户服务实例
-  const userService = new UserService(
-    c.env.DB,
+  const db = drizzle(c.env.DB); const userService = new UserService(db,
     c.env.JWT_SECRET,
     c.env.JWT_EXPIRATION || '7d'
   )
@@ -197,8 +199,7 @@ users.post('/login/evm', siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const userService = new UserService(
-    c.env.DB,
+  const db = drizzle(c.env.DB); const userService = new UserService(db,
     c.env.JWT_SECRET,
     c.env.JWT_EXPIRATION || '7d'
   )
@@ -219,7 +220,7 @@ users.post('/login/evm', siteMiddleware, async (c: Context) => {
  * 
  * **验证需求**: 5.1, 5.2
  */
-users.post('/', authMiddleware, siteMiddleware, async (c: Context) => {
+users.post('/user', authMiddleware, siteMiddleware, async (c: Context) => {
   const authContext = getAuthContext(c)
   const { siteId } = getSiteContext(c)
 
@@ -237,8 +238,7 @@ users.post('/', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const userService = new UserService(
-    c.env.DB,
+  const db = drizzle(c.env.DB); const userService = new UserService(db,
     c.env.JWT_SECRET,
     c.env.JWT_EXPIRATION || '7d'
   )
@@ -262,7 +262,7 @@ users.post('/', authMiddleware, siteMiddleware, async (c: Context) => {
  * 
  * **验证需求**: 5.3, 5.4
  */
-users.put('/:id', authMiddleware, siteMiddleware, async (c: Context) => {
+users.put('/user/:id', authMiddleware, siteMiddleware, async (c: Context) => {
   const authContext = getAuthContext(c)
   const { siteId } = getSiteContext(c)
 
@@ -291,8 +291,7 @@ users.put('/:id', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const userService = new UserService(
-    c.env.DB,
+  const db = drizzle(c.env.DB); const userService = new UserService(db,
     c.env.JWT_SECRET,
     c.env.JWT_EXPIRATION || '7d'
   )
@@ -314,7 +313,7 @@ users.put('/:id', authMiddleware, siteMiddleware, async (c: Context) => {
  * 
  * **验证需求**: 5.5
  */
-users.delete('/:id', authMiddleware, siteMiddleware, async (c: Context) => {
+users.delete('/user/:id', authMiddleware, siteMiddleware, async (c: Context) => {
   const authContext = getAuthContext(c)
   const { siteId } = getSiteContext(c)
 
@@ -335,8 +334,7 @@ users.delete('/:id', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const userService = new UserService(
-    c.env.DB,
+  const db = drizzle(c.env.DB); const userService = new UserService(db,
     c.env.JWT_SECRET,
     c.env.JWT_EXPIRATION || '7d'
   )
@@ -362,7 +360,7 @@ users.delete('/:id', authMiddleware, siteMiddleware, async (c: Context) => {
  * 
  * **验证需求**: 5.4
  */
-users.get('/', authMiddleware, siteMiddleware, async (c: Context) => {
+users.get('/user', authMiddleware, siteMiddleware, async (c: Context) => {
   const { siteId } = getSiteContext(c)
 
   // 获取查询参数
@@ -378,8 +376,8 @@ users.get('/', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const userService = new UserService(
-    c.env.DB,
+  const db = drizzle(c.env.DB)
+  const userService = new UserService(db,
     c.env.JWT_SECRET,
     c.env.JWT_EXPIRATION || '7d'
   )
@@ -408,7 +406,7 @@ users.get('/', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 查询总数
-  const totalResult = await c.env.DB
+  const totalResult = await db
     .select({ count: usersTable.id })
     .from(usersTable)
     .where(and(...conditions))
@@ -418,7 +416,7 @@ users.get('/', authMiddleware, siteMiddleware, async (c: Context) => {
 
   // 查询数据
   const offset = (page - 1) * pageSize
-  const results = await c.env.DB
+  const results = await db
     .select()
     .from(usersTable)
     .where(and(...conditions))

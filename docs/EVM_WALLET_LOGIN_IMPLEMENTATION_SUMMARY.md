@@ -130,7 +130,7 @@ Timestamp: {Unix时间戳}
 
 ### 1. 获取登录 nonce
 ```bash
-curl -X GET https://api.example.com/api/v1/auth/wallet/nonce \
+curl -X GET https://cms.bailashu.com/api/v1/auth/wallet/nonce \
   -H "Site-Id: 1"
 ```
 
@@ -156,7 +156,7 @@ const signature = await ethereum.request({
 
 ### 3. 提交签名登录
 ```bash
-curl -X POST https://api.example.com/api/v1/auth/wallet/login \
+curl -X POST https://cms.bailashu.com/api/v1/auth/wallet/login \
   -H "Site-Id: 1" \
   -H "Content-Type: application/json" \
   -d '{
@@ -184,7 +184,7 @@ curl -X POST https://api.example.com/api/v1/auth/wallet/login \
 ### 4. 配置 EVM 地址
 ```bash
 # 创建用户时配置
-curl -X POST https://api.example.com/api/v1/users \
+curl -X POST https://cms.bailashu.com/api/v1/users \
   -H "Authorization: Bearer {token}" \
   -H "Site-Id: 1" \
   -H "Content-Type: application/json" \
@@ -195,7 +195,7 @@ curl -X POST https://api.example.com/api/v1/users \
   }'
 
 # 更新用户时配置
-curl -X PUT https://api.example.com/api/v1/users/1 \
+curl -X PUT https://cms.bailashu.com/api/v1/users/1 \
   -H "Authorization: Bearer {token}" \
   -H "Site-Id: 1" \
   -H "Content-Type: application/json" \

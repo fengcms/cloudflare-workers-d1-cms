@@ -43,8 +43,8 @@ app.get('/api/v1', (c) => {
   })
 })
 
-// 注册用户路由
-app.route('/api/v1/user', users)
+// 注册用户路由（公开端点：注册、登录）
+app.route('/api/v1', users)
 
 // 注册频道路由
 app.route('/api/v1/channel', channels)

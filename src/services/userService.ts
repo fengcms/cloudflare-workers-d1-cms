@@ -37,10 +37,11 @@ export class UserService {
   /**
    * 创建用户
    * 
-   * 自动哈希密码，验证用户名、邮箱和 EVM 地址唯一性。
+   * 接收前端传来的 SHA256 哈希密码，再进行 bcrypt 哈希存储。
+   * 验证用户名、邮箱和 EVM 地址唯一性。
    * 响应中不包含密码哈希。
    * 
-   * @param data - 用户创建数据
+   * @param data - 用户创建数据（password 应为 SHA256 哈希值）
    * @param siteId - 站点ID
    * @returns 创建的用户（不含密码）
    * 
@@ -79,7 +80,8 @@ export class UserService {
       }
     }
 
-    // 哈希密码
+    // 对 SHA256 哈希后的密码再进行 bcrypt 哈希
+    // 前端应该先对密码进行 SHA256 哈希，然后传递给后端
     const hashedPassword = await hashPassword(data.password)
 
     const now = new Date()
@@ -198,7 +200,7 @@ export class UserService {
     if (data.status !== undefined) updateData.status = data.status
     if (normalizedEvmAddress !== undefined) updateData.evm_address = normalizedEvmAddress
 
-    // 如果提供新密码，哈希后更新
+    // 如果提供新密码，对 SHA256 哈希再进行 bcrypt 哈希后更新
     if (data.password) {
       updateData.password = await hashPassword(data.password)
     }
@@ -249,17 +251,17 @@ export class UserService {
   /**
    * 用户登录
    * 
-   * 验证用户名和密码，生成 JWT token。
+   * 接收前端传来的 SHA256 哈希密码，验证用户名和密码，生成 JWT token。
    * 更新最后登录时间。
    * 
    * @param username - 用户名
-   * @param password - 密码
+   * @param passwordHash - SHA256 哈希后的密码
    * @param siteId - 站点ID
    * @returns JWT token 和用户信息（不含密码）
    * 
    * **验证需求**: 10.2, 10.5
    */
-  async login(username: string, password: string, siteId: number): Promise<LoginResult> {
+  async login(username: string, passwordHash: string, siteId: number): Promise<LoginResult> {
     // 查找用户
     const user = await this.db
       .select()
@@ -277,8 +279,8 @@ export class UserService {
       throw new AuthenticationError('用户名或密码错误')
     }
 
-    // 验证密码
-    const isPasswordValid = await verifyPassword(password, user.password)
+    // 验证密码（passwordHash 是前端传来的 SHA256 哈希）
+    const isPasswordValid = await verifyPassword(passwordHash, user.password)
     if (!isPasswordValid) {
       throw new AuthenticationError('用户名或密码错误')
     }

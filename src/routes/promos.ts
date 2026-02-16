@@ -13,6 +13,7 @@
 
 import { Hono } from 'hono'
 import type { Context } from 'hono'
+import { drizzle } from 'drizzle-orm/d1'
 import { PromoService } from '../services/promoService'
 import { CacheManager } from '../services/cacheManager'
 import { authMiddleware, getAuthContext } from '../middleware/auth'
@@ -63,7 +64,8 @@ promos.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Cont
   const cacheManager = new CacheManager(c.env.CACHE)
 
   // 创建推广服务实例
-  const promoService = new PromoService(c.env.DB, cacheManager)
+  const db = drizzle(c.env.DB)
+  const promoService = new PromoService(db, cacheManager)
 
   // 创建推广
   const promo = await promoService.create(body, siteId)
@@ -106,7 +108,8 @@ promos.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: Co
   const cacheManager = new CacheManager(c.env.CACHE)
 
   // 创建推广服务实例
-  const promoService = new PromoService(c.env.DB, cacheManager)
+  const db = drizzle(c.env.DB)
+  const promoService = new PromoService(db, cacheManager)
 
   // 更新推广
   const promo = await promoService.update(promoId, body, siteId)
@@ -144,7 +147,8 @@ promos.delete('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c:
   const cacheManager = new CacheManager(c.env.CACHE)
 
   // 创建推广服务实例
-  const promoService = new PromoService(c.env.DB, cacheManager)
+  const db = drizzle(c.env.DB)
+  const promoService = new PromoService(db, cacheManager)
 
   // 删除推广（软删除）
   await promoService.delete(promoId, siteId)
@@ -167,7 +171,8 @@ promos.get('/active', authMiddleware, siteMiddleware, async (c: Context) => {
   const cacheManager = new CacheManager(c.env.CACHE)
 
   // 创建推广服务实例
-  const promoService = new PromoService(c.env.DB, cacheManager)
+  const db = drizzle(c.env.DB)
+  const promoService = new PromoService(db, cacheManager)
 
   // 获取活动推广
   const activePromos = await promoService.getActive(siteId)
@@ -205,7 +210,8 @@ promos.put('/:id/toggle', authMiddleware, siteMiddleware, auditMiddleware, async
   const cacheManager = new CacheManager(c.env.CACHE)
 
   // 创建推广服务实例
-  const promoService = new PromoService(c.env.DB, cacheManager)
+  const db = drizzle(c.env.DB)
+  const promoService = new PromoService(db, cacheManager)
 
   // 切换推广状态
   const promo = await promoService.toggleStatus(promoId, siteId)

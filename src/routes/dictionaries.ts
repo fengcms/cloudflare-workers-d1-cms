@@ -12,6 +12,7 @@
 
 import { Hono } from 'hono'
 import type { Context } from 'hono'
+import { drizzle } from 'drizzle-orm/d1'
 import { DictionaryService } from '../services/dictionaryService'
 import { authMiddleware, getAuthContext } from '../middleware/auth'
 import { siteMiddleware, getSiteContext } from '../middleware/site'
@@ -59,7 +60,8 @@ dictionaries.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c
   }
 
   // 创建字典服务实例
-  const dictionaryService = new DictionaryService(c.env.DB)
+  const db = drizzle(c.env.DB)
+  const dictionaryService = new DictionaryService(db)
 
   // 创建字典条目
   const dict = await dictionaryService.create(body, siteId)
@@ -99,7 +101,8 @@ dictionaries.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async 
   const body = await c.req.json() as UpdateDictInput
 
   // 创建字典服务实例
-  const dictionaryService = new DictionaryService(c.env.DB)
+  const db = drizzle(c.env.DB)
+  const dictionaryService = new DictionaryService(db)
 
   // 更新字典条目
   const dict = await dictionaryService.update(dictId, body, siteId)
@@ -134,7 +137,8 @@ dictionaries.delete('/:id', authMiddleware, siteMiddleware, auditMiddleware, asy
   }
 
   // 创建字典服务实例
-  const dictionaryService = new DictionaryService(c.env.DB)
+  const db = drizzle(c.env.DB)
+  const dictionaryService = new DictionaryService(db)
 
   // 删除字典条目（软删除）
   await dictionaryService.delete(dictId, siteId)
@@ -165,7 +169,8 @@ dictionaries.get('/', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 创建字典服务实例
-  const dictionaryService = new DictionaryService(c.env.DB)
+  const db = drizzle(c.env.DB)
+  const dictionaryService = new DictionaryService(db)
 
   // 如果提供了类型参数，按类型查询；否则返回所有类型
   let dicts

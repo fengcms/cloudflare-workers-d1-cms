@@ -5,64 +5,48 @@ compatibility_date = "2024-01-01"
 # D1 Database binding (top-level for migrations)
 [[d1_databases]]
 binding = "DB"
-database_name = "cms_development"
-database_id = "local"
+database_name = "cms_production"
+database_id = "1fcc9f4c-1c2b-4f3d-9f99-3ef03a722b32"
 migrations_dir = "drizzle/migrations"
 
-# Development environment (default)
+# Development environment (default) - 使用本地模拟
 [env.development]
 vars = { ENVIRONMENT = "development" }
 
-# R2 Bucket binding for development
-[[env.development.r2_buckets]]
-binding = "IMAGES"
-bucket_name = "cms-images-development"
-
-# KV Namespace binding for development
-[[env.development.kv_namespaces]]
-binding = "CACHE"
-id = "local"
-
-# R2 Bucket binding for development
-[[env.development.r2_buckets]]
-binding = "IMAGES"
-bucket_name = "cms-images-development"
-
-# KV Namespace binding for development
-[[env.development.kv_namespaces]]
-binding = "CACHE"
-id = "local"
-
-# Staging environment
-[env.staging]
-vars = { ENVIRONMENT = "staging" }
-
-[[env.staging.d1_databases]]
+# D1 Database binding for development (local)
+[[env.development.d1_databases]]
 binding = "DB"
-database_name = "cms_staging"
-database_id = "<staging-db-id>"
+database_name = "cms_development_local"
+database_id = "local"
 
-[[env.staging.r2_buckets]]
+# R2 Bucket binding for development (local)
+[[env.development.r2_buckets]]
 binding = "IMAGES"
-bucket_name = "cms-images-staging"
+bucket_name = "cms-images-local"
+preview_bucket_name = "cms-images-local"
 
-[[env.staging.kv_namespaces]]
+# KV Namespace binding for development (local)
+[[env.development.kv_namespaces]]
 binding = "CACHE"
-id = "<staging-kv-id>"
+id = "local"
 
-# Production environment
+# Production environment - 使用真实的 Cloudflare 资源
 [env.production]
 vars = { ENVIRONMENT = "production" }
 
+# D1 Database binding for production
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "cms_production"
-database_id = "<production-db-id>"
+database_id = "1fcc9f4c-1c2b-4f3d-9f99-3ef03a722b32"
+migrations_dir = "drizzle/migrations"
 
+# R2 Bucket binding for production
 [[env.production.r2_buckets]]
 binding = "IMAGES"
-bucket_name = "cms-images-production"
+bucket_name = "cms-images"
 
+# KV Namespace binding for production
 [[env.production.kv_namespaces]]
 binding = "CACHE"
-id = "<production-kv-id>"
+id = "75e3b34e431d4154b26fe728db111b36"

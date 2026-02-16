@@ -13,6 +13,7 @@
 
 import { Hono } from 'hono'
 import type { Context } from 'hono'
+import { drizzle } from 'drizzle-orm/d1'
 import { ArticleService } from '../services/articleService'
 import { authMiddleware, getAuthContext } from '../middleware/auth'
 import { siteMiddleware, getSiteContext } from '../middleware/site'
@@ -64,7 +65,8 @@ articles.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Co
   }
 
   // 创建文章服务实例
-  const articleService = new ArticleService(c.env.DB)
+  const db = drizzle(c.env.DB)
+  const articleService = new ArticleService(db)
 
   // 创建文章
   const article = await articleService.create(body, siteId, authContext.userId)
@@ -104,7 +106,8 @@ articles.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: 
   const body = await c.req.json() as UpdateArticleInput
 
   // 创建文章服务实例
-  const articleService = new ArticleService(c.env.DB)
+  const db = drizzle(c.env.DB)
+  const articleService = new ArticleService(db)
 
   // 更新文章
   const article = await articleService.update(articleId, body, siteId)
@@ -139,7 +142,8 @@ articles.delete('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (
   }
 
   // 创建文章服务实例
-  const articleService = new ArticleService(c.env.DB)
+  const db = drizzle(c.env.DB)
+  const articleService = new ArticleService(db)
 
   // 删除文章（软删除）
   await articleService.delete(articleId, siteId)
@@ -216,7 +220,8 @@ articles.get('/', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 创建文章服务实例
-  const articleService = new ArticleService(c.env.DB)
+  const db = drizzle(c.env.DB)
+  const articleService = new ArticleService(db)
 
   // 查询文章列表
   const result = await articleService.query(queryParams, siteId)
@@ -245,7 +250,8 @@ articles.get('/:id', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 创建文章服务实例
-  const articleService = new ArticleService(c.env.DB)
+  const db = drizzle(c.env.DB)
+  const articleService = new ArticleService(db)
 
   // 获取文章详情
   const article = await articleService.getById(articleId, siteId)

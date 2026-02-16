@@ -12,6 +12,7 @@
 
 import { Hono } from 'hono'
 import type { Context } from 'hono'
+import { drizzle } from 'drizzle-orm/d1'
 import { ChannelService } from '../services/channelService'
 import { CacheManager } from '../services/cacheManager'
 import { authMiddleware, getAuthContext } from '../middleware/auth'
@@ -62,7 +63,8 @@ channels.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Co
   const cacheManager = new CacheManager(c.env.CACHE)
 
   // 创建频道服务实例
-  const channelService = new ChannelService(c.env.DB, cacheManager)
+  const db = drizzle(c.env.DB)
+  const channelService = new ChannelService(db, cacheManager)
 
   // 创建频道
   const channel = await channelService.create(body, siteId)
@@ -105,7 +107,8 @@ channels.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: 
   const cacheManager = new CacheManager(c.env.CACHE)
 
   // 创建频道服务实例
-  const channelService = new ChannelService(c.env.DB, cacheManager)
+  const db = drizzle(c.env.DB)
+  const channelService = new ChannelService(db, cacheManager)
 
   // 更新频道
   const channel = await channelService.update(channelId, body, siteId)
@@ -143,7 +146,8 @@ channels.delete('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (
   const cacheManager = new CacheManager(c.env.CACHE)
 
   // 创建频道服务实例
-  const channelService = new ChannelService(c.env.DB, cacheManager)
+  const db = drizzle(c.env.DB)
+  const channelService = new ChannelService(db, cacheManager)
 
   // 删除频道（软删除）
   await channelService.delete(channelId, siteId)
@@ -166,7 +170,8 @@ channels.get('/tree', authMiddleware, siteMiddleware, async (c: Context) => {
   const cacheManager = new CacheManager(c.env.CACHE)
 
   // 创建频道服务实例
-  const channelService = new ChannelService(c.env.DB, cacheManager)
+  const db = drizzle(c.env.DB)
+  const channelService = new ChannelService(db, cacheManager)
 
   // 获取频道树
   const tree = await channelService.getTree(siteId)

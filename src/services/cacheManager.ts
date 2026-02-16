@@ -18,6 +18,10 @@ export class CacheManager {
    */
   async get<T>(key: string): Promise<T | null> {
     try {
+      if (!this.kv) {
+        console.warn('KV namespace not available, skipping cache get')
+        return null
+      }
       const value = await this.kv.get(key, 'text')
       if (value === null) {
         return null
@@ -38,6 +42,10 @@ export class CacheManager {
    */
   async set(key: string, value: any, ttl?: number): Promise<void> {
     try {
+      if (!this.kv) {
+        console.warn('KV namespace not available, skipping cache set')
+        return
+      }
       const serialized = JSON.stringify(value)
       const options: KVNamespacePutOptions = {}
       
@@ -59,6 +67,10 @@ export class CacheManager {
    */
   async delete(key: string): Promise<void> {
     try {
+      if (!this.kv) {
+        console.warn('KV namespace not available, skipping cache delete')
+        return
+      }
       await this.kv.delete(key)
     } catch (error) {
       console.error(`Cache delete error for key ${key}:`, error)
@@ -73,6 +85,10 @@ export class CacheManager {
    */
   async deleteByPrefix(prefix: string): Promise<void> {
     try {
+      if (!this.kv) {
+        console.warn('KV namespace not available, skipping cache deleteByPrefix')
+        return
+      }
       const list = await this.kv.list({ prefix })
       
       // Delete all keys matching the prefix

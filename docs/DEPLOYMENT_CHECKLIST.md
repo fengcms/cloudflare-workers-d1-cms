@@ -90,7 +90,7 @@ npm run deploy:production
 ### 1. 健康检查
 
 ```bash
-curl https://your-worker-domain.workers.dev/health
+curl https://cms.bailashu.com/health
 ```
 
 预期响应：
@@ -105,7 +105,7 @@ curl https://your-worker-domain.workers.dev/health
 ### 2. API 版本检查
 
 ```bash
-curl https://your-worker-domain.workers.dev/api/v1
+curl https://cms.bailashu.com/api/v1
 ```
 
 预期响应：
@@ -135,7 +135,7 @@ curl -X POST https://your-worker-domain.workers.dev/api/v1/users \
 ### 4. 测试登录
 
 ```bash
-curl -X POST https://your-worker-domain.workers.dev/api/v1/auth/login \
+curl -X POST https://cms.bailashu.com/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -H "Site-Id: 1" \
   -d '{
@@ -148,10 +148,10 @@ curl -X POST https://your-worker-domain.workers.dev/api/v1/auth/login \
 
 ```bash
 # 获取 nonce
-curl "https://your-worker-domain.workers.dev/api/v1/auth/wallet/nonce?address=0x1234...&siteId=1"
+curl "https://cms.bailashu.com/api/v1/auth/wallet/nonce?address=0x1234...&siteId=1"
 
 # 使用 MetaMask 签名后登录
-curl -X POST https://your-worker-domain.workers.dev/api/v1/auth/wallet/login \
+curl -X POST https://cms.bailashu.com/api/v1/auth/wallet/login \
   -H "Content-Type: application/json" \
   -d '{
     "address": "0x1234...",

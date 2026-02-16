@@ -2,7 +2,7 @@
 
 ## 基础信息
 
-- **基础 URL**: `https://your-domain.workers.dev/api/v1`
+- **基础 URL**: `https://cms.bailashu.com/api/v1`
 - **认证方式**: JWT Bearer Token
 - **请求头**:
   - `Content-Type: application/json`
@@ -438,7 +438,7 @@
 {
   "code": 201,
   "data": {
-    "url": "https://images.example.com/abc123.jpg",
+    "url": "https://cms.bailashu.com/images/abc123.jpg",
     "filename": "abc123.jpg"
   }
 }

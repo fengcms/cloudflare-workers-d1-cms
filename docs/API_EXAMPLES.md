@@ -5,7 +5,7 @@
 ## 基础配置
 
 ```javascript
-const API_BASE_URL = 'https://your-worker-domain.workers.dev/api/v1';
+const API_BASE_URL = 'https://cms.bailashu.com/api/v1';
 const SITE_ID = 1; // 你的站点 ID
 
 // 设置请求头

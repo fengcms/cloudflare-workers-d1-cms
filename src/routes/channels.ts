@@ -1,45 +1,38 @@
 /**
  * 频道路由
- * 
+ *
  * 实现频道管理相关的 API 端点：
  * - POST /api/v1/channel - 创建频道（需要 MANAGE 或更高权限）
  * - PUT /api/v1/channel/:id - 更新频道（需要 MANAGE 或更高权限）
  * - DELETE /api/v1/channel/:id - 删除频道（需要 MANAGE 或更高权限）
  * - GET /api/v1/channel/tree - 获取频道树（需要认证）
- * 
+ *
  * **验证需求**: 3.1, 3.2, 3.3, 3.4
  */
 
-import { Hono } from 'hono'
-import type { Context } from 'hono'
 import { drizzle } from 'drizzle-orm/d1'
-import { ChannelService } from '../services/channelService'
-import { CacheManager } from '../services/cacheManager'
-import { authMiddleware, getAuthContext } from '../middleware/auth'
-import { siteMiddleware, getSiteContext } from '../middleware/site'
+import type { Context } from 'hono'
+import { Hono } from 'hono'
+import { AuthorizationError, ValidationError } from '../errors'
 import { auditMiddleware } from '../middleware/audit'
+import { authMiddleware, getAuthContext } from '../middleware/auth'
+import { getSiteContext, siteMiddleware } from '../middleware/site'
+import { CacheManager } from '../services/cacheManager'
+import { ChannelService } from '../services/channelService'
+import { type CreateChannelInput, type UpdateChannelInput, UserTypeEnum } from '../types'
 import { checkPermission } from '../utils/authorization'
 import { successResponse } from '../utils/response'
-import { 
-  AuthorizationError, 
-  ValidationError 
-} from '../errors'
-import { 
-  UserTypeEnum, 
-  CreateChannelInput, 
-  UpdateChannelInput 
-} from '../types'
 
 const channels = new Hono()
 
 /**
  * POST /api/v1/channels
  * 创建频道（需要 MANAGE 或更高权限）
- * 
+ *
  * 请求体：CreateChannelInput
- * 
+ *
  * 响应：Channel
- * 
+ *
  * **验证需求**: 3.1, 3.2
  */
 channels.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Context) => {
@@ -52,7 +45,7 @@ channels.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Co
   }
 
   // 获取请求体
-  const body = await c.req.json() as CreateChannelInput
+  const body = (await c.req.json()) as CreateChannelInput
 
   // 验证必填字段
   if (!body.name) {
@@ -75,14 +68,14 @@ channels.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Co
 /**
  * PUT /api/v1/channels/:id
  * 更新频道（需要 MANAGE 或更高权限）
- * 
+ *
  * 路径参数：
  * - id: number - 频道ID
- * 
+ *
  * 请求体：UpdateChannelInput
- * 
+ *
  * 响应：Channel
- * 
+ *
  * **验证需求**: 3.2, 3.4
  */
 channels.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: Context) => {
@@ -101,7 +94,7 @@ channels.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: 
   }
 
   // 获取请求体
-  const body = await c.req.json() as UpdateChannelInput
+  const body = (await c.req.json()) as UpdateChannelInput
 
   // 创建缓存管理器实例
   const cacheManager = new CacheManager(c.env.CACHE)
@@ -119,12 +112,12 @@ channels.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: 
 /**
  * DELETE /api/v1/channels/:id
  * 删除频道（需要 MANAGE 或更高权限）
- * 
+ *
  * 路径参数：
  * - id: number - 频道ID
- * 
+ *
  * 响应：成功消息
- * 
+ *
  * **验证需求**: 3.4
  */
 channels.delete('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: Context) => {
@@ -158,9 +151,9 @@ channels.delete('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (
 /**
  * GET /api/v1/channels/tree
  * 获取频道树（需要认证）
- * 
+ *
  * 响应：ChannelTree[]
- * 
+ *
  * **验证需求**: 3.3
  */
 channels.get('/tree', authMiddleware, siteMiddleware, async (c: Context) => {

@@ -1,6 +1,6 @@
 /**
  * 用户路由
- * 
+ *
  * 实现用户管理相关的 API 端点：
  * - POST /api/v1/register - 用户注册（公开端点）
  * - POST /api/v1/user - 创建用户（需要 MANAGE 或更高权限）
@@ -10,53 +10,46 @@
  * - POST /api/v1/login - 用户登录（公开端点，不需要认证）
  * - GET /api/v1/login/nonce - 获取钱包登录 nonce（公开端点）
  * - POST /api/v1/login/evm - EVM 钱包签名登录（公开端点）
- * 
+ *
  * **验证需求**: 5.1, 5.2, 5.3, 5.4, 5.5, 9.1, 21.1, 21.2, 21.3, 21.4, 21.5
  */
 
-import { Hono } from 'hono'
-import type { Context } from 'hono'
 import { drizzle } from 'drizzle-orm/d1'
-import { UserService } from '../services/userService'
+import type { Context } from 'hono'
+import { Hono } from 'hono'
+import { AuthorizationError, ValidationError } from '../errors'
 import { authMiddleware, getAuthContext } from '../middleware/auth'
-import { siteMiddleware, getSiteContext } from '../middleware/site'
+import { getSiteContext, siteMiddleware } from '../middleware/site'
+import { UserService } from '../services/userService'
+import { type CreateUserInput, type UpdateUserInput, UserTypeEnum } from '../types'
 import { checkPermission } from '../utils/authorization'
-import { successResponse } from '../utils/response'
-import { 
-  AuthorizationError, 
-  ValidationError 
-} from '../errors'
 import { generateToken } from '../utils/jwt'
-import { 
-  UserTypeEnum, 
-  CreateUserInput, 
-  UpdateUserInput 
-} from '../types'
+import { successResponse } from '../utils/response'
 
 const users = new Hono()
 
 /**
  * POST /api/v1/register
  * 用户注册（公开端点）
- * 
+ *
  * 请求体：
  * - username: string - 用户名
  * - password: string - 密码
  * - nickname: string - 昵称
  * - email?: string - 邮箱（可选）
  * - evm_address?: string - EVM 地址（可选）
- * 
+ *
  * 响应：
  * - token: string - JWT 令牌
  * - user: UserWithoutPassword - 用户信息（不含密码）
- * 
+ *
  * **验证需求**: 5.1, 5.2
  */
 users.post('/register', siteMiddleware, async (c: Context) => {
   const { siteId } = getSiteContext(c)
-  
+
   // 获取请求体
-  const body = await c.req.json() as CreateUserInput
+  const body = (await c.req.json()) as CreateUserInput
 
   // 验证必填字段
   if (!body.username || !body.password || !body.nickname) {
@@ -64,16 +57,17 @@ users.post('/register', siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const db = drizzle(c.env.DB); const userService = new UserService(db,
-    c.env.JWT_SECRET,
-    c.env.JWT_EXPIRATION || '7d'
-  )
+  const db = drizzle(c.env.DB)
+  const userService = new UserService(db, c.env.JWT_SECRET, c.env.JWT_EXPIRATION || '7d')
 
   // 注册用户（默认为 USER 类型）
-  const user = await userService.create({
-    ...body,
-    type: UserTypeEnum.USER // 注册的用户默认为普通用户
-  }, siteId)
+  const user = await userService.create(
+    {
+      ...body,
+      type: UserTypeEnum.USER, // 注册的用户默认为普通用户
+    },
+    siteId
+  )
 
   // 自动登录，生成 token
   const token = await generateToken(
@@ -81,35 +75,38 @@ users.post('/register', siteMiddleware, async (c: Context) => {
       userId: user.id,
       username: user.username,
       type: user.type as UserTypeEnum,
-      siteId: user.site_id
+      siteId: user.site_id,
     },
     c.env.JWT_SECRET,
     c.env.JWT_EXPIRATION || '7d'
   )
 
-  return c.json(successResponse({
-    token,
-    user
-  }), 201)
+  return c.json(
+    successResponse({
+      token,
+      user,
+    }),
+    201
+  )
 })
 
 /**
  * POST /api/v1/login
  * 用户登录（公开端点）
- * 
+ *
  * 请求体：
  * - username: string - 用户名
  * - password: string - 密码
- * 
+ *
  * 响应：
  * - token: string - JWT 令牌
  * - user: UserWithoutPassword - 用户信息（不含密码）
- * 
+ *
  * **验证需求**: 9.1
  */
 users.post('/login', siteMiddleware, async (c: Context) => {
   const { siteId } = getSiteContext(c)
-  
+
   // 获取请求体
   const body = await c.req.json()
   const { username, password } = body
@@ -120,10 +117,8 @@ users.post('/login', siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const db = drizzle(c.env.DB); const userService = new UserService(db,
-    c.env.JWT_SECRET,
-    c.env.JWT_EXPIRATION || '7d'
-  )
+  const db = drizzle(c.env.DB)
+  const userService = new UserService(db, c.env.JWT_SECRET, c.env.JWT_EXPIRATION || '7d')
 
   // 执行登录
   const result = await userService.login(username, password, siteId)
@@ -134,50 +129,50 @@ users.post('/login', siteMiddleware, async (c: Context) => {
 /**
  * GET /api/v1/login/nonce
  * 获取钱包登录的 nonce 消息（公开端点）
- * 
+ *
  * 响应：
  * - message: string - 需要签名的消息
  * - timestamp: number - 时间戳
- * 
+ *
  * **验证需求**: 21.1, 21.2
  */
 users.get('/login/nonce', async (c: Context) => {
   // 创建用户服务实例
-  const db = drizzle(c.env.DB); const userService = new UserService(db,
-    c.env.JWT_SECRET,
-    c.env.JWT_EXPIRATION || '7d'
-  )
+  const db = drizzle(c.env.DB)
+  const userService = new UserService(db, c.env.JWT_SECRET, c.env.JWT_EXPIRATION || '7d')
 
   // 生成 nonce 消息
   const message = userService.generateWalletLoginMessage()
-  
+
   // 提取时间戳
   const timestampMatch = message.match(/Timestamp: (\d+)/)
   const timestamp = timestampMatch ? parseInt(timestampMatch[1], 10) : Math.floor(Date.now() / 1000)
 
-  return c.json(successResponse({
-    message,
-    timestamp
-  }))
+  return c.json(
+    successResponse({
+      message,
+      timestamp,
+    })
+  )
 })
 
 /**
  * POST /api/v1/login/evm
  * EVM 钱包签名登录（公开端点）
- * 
+ *
  * 请求体：
  * - signature: string - 签名字符串（0x 开头）
  * - message: string - 被签名的消息（从 /login/nonce 获取）
- * 
+ *
  * 响应：
  * - token: string - JWT 令牌
  * - user: UserWithoutPassword - 用户信息（不含密码）
- * 
+ *
  * **验证需求**: 21.1, 21.3, 21.4, 21.5
  */
 users.post('/login/evm', siteMiddleware, async (c: Context) => {
   const { siteId } = getSiteContext(c)
-  
+
   // 获取请求体
   const body = await c.req.json()
   const { signature, message } = body
@@ -199,10 +194,8 @@ users.post('/login/evm', siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const db = drizzle(c.env.DB); const userService = new UserService(db,
-    c.env.JWT_SECRET,
-    c.env.JWT_EXPIRATION || '7d'
-  )
+  const db = drizzle(c.env.DB)
+  const userService = new UserService(db, c.env.JWT_SECRET, c.env.JWT_EXPIRATION || '7d')
 
   // 执行钱包登录
   const result = await userService.loginWithWallet(signature, message, siteId)
@@ -213,11 +206,11 @@ users.post('/login/evm', siteMiddleware, async (c: Context) => {
 /**
  * POST /api/v1/user
  * 创建用户（需要 MANAGE 或更高权限）
- * 
+ *
  * 请求体：CreateUserInput
- * 
+ *
  * 响应：UserWithoutPassword
- * 
+ *
  * **验证需求**: 5.1, 5.2
  */
 users.post('/user', authMiddleware, siteMiddleware, async (c: Context) => {
@@ -230,7 +223,7 @@ users.post('/user', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 获取请求体
-  const body = await c.req.json() as CreateUserInput
+  const body = (await c.req.json()) as CreateUserInput
 
   // 验证必填字段
   if (!body.username || !body.password) {
@@ -238,10 +231,8 @@ users.post('/user', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const db = drizzle(c.env.DB); const userService = new UserService(db,
-    c.env.JWT_SECRET,
-    c.env.JWT_EXPIRATION || '7d'
-  )
+  const db = drizzle(c.env.DB)
+  const userService = new UserService(db, c.env.JWT_SECRET, c.env.JWT_EXPIRATION || '7d')
 
   // 创建用户
   const user = await userService.create(body, siteId)
@@ -252,14 +243,14 @@ users.post('/user', authMiddleware, siteMiddleware, async (c: Context) => {
 /**
  * PUT /api/v1/user/:id
  * 更新用户（需要 MANAGE 或更高权限，或用户本人）
- * 
+ *
  * 路径参数：
  * - id: number - 用户ID
- * 
+ *
  * 请求体：UpdateUserInput
- * 
+ *
  * 响应：UserWithoutPassword
- * 
+ *
  * **验证需求**: 5.3, 5.4
  */
 users.put('/user/:id', authMiddleware, siteMiddleware, async (c: Context) => {
@@ -281,7 +272,7 @@ users.put('/user/:id', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 获取请求体
-  const body = await c.req.json() as UpdateUserInput
+  const body = (await c.req.json()) as UpdateUserInput
 
   // 如果是普通用户修改自己的信息，不允许修改 type 和 status
   if (isOwnProfile && !hasManagePermission) {
@@ -291,10 +282,8 @@ users.put('/user/:id', authMiddleware, siteMiddleware, async (c: Context) => {
   }
 
   // 创建用户服务实例
-  const db = drizzle(c.env.DB); const userService = new UserService(db,
-    c.env.JWT_SECRET,
-    c.env.JWT_EXPIRATION || '7d'
-  )
+  const db = drizzle(c.env.DB)
+  const userService = new UserService(db, c.env.JWT_SECRET, c.env.JWT_EXPIRATION || '7d')
 
   // 更新用户
   const user = await userService.update(userId, body, siteId)
@@ -305,12 +294,12 @@ users.put('/user/:id', authMiddleware, siteMiddleware, async (c: Context) => {
 /**
  * DELETE /api/v1/user/:id
  * 删除用户（需要 MANAGE 或更高权限）
- * 
+ *
  * 路径参数：
  * - id: number - 用户ID
- * 
+ *
  * 响应：成功消息
- * 
+ *
  * **验证需求**: 5.5
  */
 users.delete('/user/:id', authMiddleware, siteMiddleware, async (c: Context) => {
@@ -334,10 +323,8 @@ users.delete('/user/:id', authMiddleware, siteMiddleware, async (c: Context) => 
   }
 
   // 创建用户服务实例
-  const db = drizzle(c.env.DB); const userService = new UserService(db,
-    c.env.JWT_SECRET,
-    c.env.JWT_EXPIRATION || '7d'
-  )
+  const db = drizzle(c.env.DB)
+  const userService = new UserService(db, c.env.JWT_SECRET, c.env.JWT_EXPIRATION || '7d')
 
   // 删除用户（软删除）
   await userService.delete(userId, siteId)
@@ -348,16 +335,16 @@ users.delete('/user/:id', authMiddleware, siteMiddleware, async (c: Context) => 
 /**
  * GET /api/v1/user
  * 查询用户列表（需要认证，支持分页和过滤）
- * 
+ *
  * 查询参数：
  * - page: number - 页码（默认 1）
  * - pageSize: number - 每页数量（默认 10）
  * - username: string - 用户名过滤（模糊匹配）
  * - type: UserTypeEnum - 用户类型过滤
  * - status: StatusEnum - 状态过滤
- * 
+ *
  * 响应：PaginatedResult<UserWithoutPassword>
- * 
+ *
  * **验证需求**: 5.4
  */
 users.get('/user', authMiddleware, siteMiddleware, async (c: Context) => {
@@ -377,10 +364,7 @@ users.get('/user', authMiddleware, siteMiddleware, async (c: Context) => {
 
   // 创建用户服务实例
   const db = drizzle(c.env.DB)
-  const userService = new UserService(db,
-    c.env.JWT_SECRET,
-    c.env.JWT_EXPIRATION || '7d'
-  )
+  const userService = new UserService(db, c.env.JWT_SECRET, c.env.JWT_EXPIRATION || '7d')
 
   // 构建查询（这里简化实现，实际应该在 UserService 中实现 query 方法）
   // 由于 UserService 没有 query 方法，我们直接使用数据库查询
@@ -436,7 +420,7 @@ users.get('/user', authMiddleware, siteMiddleware, async (c: Context) => {
     total,
     page,
     pageSize,
-    totalPages: Math.ceil(total / pageSize)
+    totalPages: Math.ceil(total / pageSize),
   }
 
   return c.json(successResponse(paginatedResult))

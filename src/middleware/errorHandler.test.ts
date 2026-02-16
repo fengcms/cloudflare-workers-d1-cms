@@ -2,17 +2,17 @@
  * 全局错误处理中间件测试
  */
 
-import { describe, it, expect, vi } from 'vitest'
 import { Hono } from 'hono'
-import { errorHandler } from './errorHandler'
+import { describe, expect, it, vi } from 'vitest'
 import {
-  ValidationError,
   AuthenticationError,
   AuthorizationError,
-  NotFoundError,
   ConflictError,
-  InternalError
+  InternalError,
+  NotFoundError,
+  ValidationError,
 } from '../errors'
+import { errorHandler } from './errorHandler'
 
 describe('errorHandler middleware', () => {
   it('should handle ValidationError with 400 status', async () => {
@@ -31,8 +31,8 @@ describe('errorHandler middleware', () => {
       error: {
         code: 'VALIDATION_ERROR',
         message: '验证失败',
-        details: { username: ['用户名不能为空'] }
-      }
+        details: { username: ['用户名不能为空'] },
+      },
     })
   })
 
@@ -51,8 +51,8 @@ describe('errorHandler middleware', () => {
       success: false,
       error: {
         code: 'AUTHENTICATION_ERROR',
-        message: '未授权访问'
-      }
+        message: '未授权访问',
+      },
     })
   })
 
@@ -71,8 +71,8 @@ describe('errorHandler middleware', () => {
       success: false,
       error: {
         code: 'AUTHORIZATION_ERROR',
-        message: '权限不足'
-      }
+        message: '权限不足',
+      },
     })
   })
 
@@ -91,8 +91,8 @@ describe('errorHandler middleware', () => {
       success: false,
       error: {
         code: 'NOT_FOUND_ERROR',
-        message: '资源未找到'
-      }
+        message: '资源未找到',
+      },
     })
   })
 
@@ -111,8 +111,8 @@ describe('errorHandler middleware', () => {
       success: false,
       error: {
         code: 'CONFLICT_ERROR',
-        message: '用户名已存在'
-      }
+        message: '用户名已存在',
+      },
     })
   })
 
@@ -131,8 +131,8 @@ describe('errorHandler middleware', () => {
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
-        message: '服务器内部错误'
-      }
+        message: '服务器内部错误',
+      },
     })
   })
 
@@ -151,8 +151,8 @@ describe('errorHandler middleware', () => {
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
-        message: '服务器内部错误'
-      }
+        message: '服务器内部错误',
+      },
     })
     // 确保不暴露敏感信息
     expect(body.error.message).not.toContain('Database')
@@ -160,7 +160,7 @@ describe('errorHandler middleware', () => {
 
   it('should log error details without exposing them to client', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    
+
     const app = new Hono()
     app.onError(errorHandler)
     app.get('/test', () => {
@@ -171,7 +171,7 @@ describe('errorHandler middleware', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: 'Sensitive database error'
+        message: 'Sensitive database error',
       })
     )
 
@@ -205,8 +205,8 @@ describe('errorHandler middleware', () => {
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
-        message: '验证失败'
-      }
+        message: '验证失败',
+      },
     })
     expect(body.error).not.toHaveProperty('details')
   })

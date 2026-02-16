@@ -1,45 +1,50 @@
 /**
  * Article Service
- * 
+ *
  * 管理文章的 CRUD 操作和查询功能。
  * 实现频道验证、软删除、完整查询规范（过滤、排序、分页、搜索）。
- * 
+ *
  * **验证需求**: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7
  */
 
-import { eq, and } from 'drizzle-orm'
-import { DrizzleD1Database } from 'drizzle-orm/d1'
-import { articles, channels, StatusEnum, ArticleTypeEnum } from '../db/schema'
-import { 
-  Article, 
-  CreateArticleInput, 
-  UpdateArticleInput,
+import { and, eq } from 'drizzle-orm'
+import type { DrizzleD1Database } from 'drizzle-orm/d1'
+import { ArticleTypeEnum, articles, channels, StatusEnum } from '../db/schema'
+import { NotFoundError, ValidationError } from '../errors'
+import type {
+  Article,
+  CreateArticleInput,
+  PaginatedResult,
   QueryParams,
-  PaginatedResult
+  UpdateArticleInput,
 } from '../types'
 import { buildQuery } from '../utils/queryBuilder'
-import { NotFoundError, ValidationError } from '../errors'
 
 export class ArticleService {
   constructor(private db: DrizzleD1Database) {}
 
   /**
    * 创建文章
-   * 
+   *
    * 验证关联的频道在相同 site_id 下存在且未被删除。
    * 根据用户权限自动设置 status：
    * - USER 权限：默认 PENDING（待审核）
    * - EDITOR、MANAGE、SUPERMANAGE 权限：默认 NORMAL（正常）
-   * 
+   *
    * @param data - 文章创建数据
    * @param siteId - 站点ID
    * @param userId - 创建用户ID
    * @param userType - 用户权限类型
    * @returns 创建的文章
-   * 
+   *
    * **验证需求**: 2.1, 2.2
    */
-  async create(data: CreateArticleInput, siteId: number, userId: number, userType: string): Promise<Article> {
+  async create(
+    data: CreateArticleInput,
+    siteId: number,
+    userId: number,
+    userType: string
+  ): Promise<Article> {
     // 验证频道存在且属于相同站点
     const channel = await this.db
       .select()
@@ -87,7 +92,7 @@ export class ArticleService {
         is_top: data.is_top ?? 0,
         site_id: siteId,
         created_at: now,
-        update_at: now
+        update_at: now,
       })
       .returning()
 
@@ -96,15 +101,15 @@ export class ArticleService {
 
   /**
    * 更新文章
-   * 
+   *
    * 如果更新 channel_id，验证新频道存在且属于相同站点。
    * 不更新已删除的文章。
-   * 
+   *
    * @param id - 文章ID
    * @param data - 文章更新数据
    * @param siteId - 站点ID
    * @returns 更新后的文章
-   * 
+   *
    * **验证需求**: 2.3
    */
   async update(id: number, data: UpdateArticleInput, siteId: number): Promise<Article> {
@@ -146,7 +151,7 @@ export class ArticleService {
 
     // 准备更新数据
     const updateData: any = {
-      update_at: new Date()
+      update_at: new Date(),
     }
 
     if (data.title !== undefined) updateData.title = data.title
@@ -178,12 +183,12 @@ export class ArticleService {
 
   /**
    * 软删除文章
-   * 
+   *
    * 将 status 设置为 StatusEnum.DELETE，更新 update_at。
-   * 
+   *
    * @param id - 文章ID
    * @param siteId - 站点ID
-   * 
+   *
    * **验证需求**: 2.4
    */
   async delete(id: number, siteId: number): Promise<void> {
@@ -193,14 +198,9 @@ export class ArticleService {
       .update(articles)
       .set({
         status: StatusEnum.DELETE,
-        update_at: now
+        update_at: now,
       })
-      .where(
-        and(
-          eq(articles.id, id),
-          eq(articles.site_id, siteId)
-        )
-      )
+      .where(and(eq(articles.id, id), eq(articles.site_id, siteId)))
       .returning()
 
     if (result.length === 0) {
@@ -210,51 +210,41 @@ export class ArticleService {
 
   /**
    * 查询文章列表
-   * 
+   *
    * 支持完整查询规范：
    * - 过滤：精确匹配（filters）
    * - 排序：按指定字段升序/降序（sort, sortOrder）
    * - 分页：page 和 pageSize
    * - 搜索：模糊匹配文本字段（search, searchFields）
    * - 比较运算符：gt, lt, gte, lte（comparisons）
-   * 
+   *
    * 自动过滤 site_id 和软删除记录。
-   * 
+   *
    * @param params - 查询参数
    * @param siteId - 站点ID
    * @returns 分页结果
-   * 
+   *
    * **验证需求**: 2.5, 2.6
    */
   async query(params: QueryParams, siteId: number): Promise<PaginatedResult<Article>> {
     // 构建查询条件
     const { where, orderBy, limit, offset } = buildQuery(params, {
       siteId,
-      tableColumns: articles as any
+      tableColumns: articles as any,
     })
 
     // 查询数据
-    let query = this.db
-      .select()
-      .from(articles)
-      .where(where)
-    
+    let query = this.db.select().from(articles).where(where)
+
     if (orderBy) {
       query = query.orderBy(orderBy) as any
     }
-    
-    const data = await query
-      .limit(limit!)
-      .offset(offset!)
-      .all()
+
+    const data = await query.limit(limit!).offset(offset!).all()
 
     // 查询总数
-    const countResult = await this.db
-      .select()
-      .from(articles)
-      .where(where)
-      .all()
-    
+    const countResult = await this.db.select().from(articles).where(where).all()
+
     const total = countResult.length
 
     // 计算分页信息
@@ -267,20 +257,20 @@ export class ArticleService {
       total,
       page,
       pageSize,
-      totalPages
+      totalPages,
     }
   }
 
   /**
    * 获取单个文章
-   * 
+   *
    * 根据 ID 获取文章详情。
    * 自动过滤 site_id 和软删除记录。
-   * 
+   *
    * @param id - 文章ID
    * @param siteId - 站点ID
    * @returns 文章详情
-   * 
+   *
    * **验证需求**: 2.7
    */
   async getById(id: number, siteId: number): Promise<Article> {

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
 import * as fc from 'fast-check'
+import { describe, expect, it } from 'vitest'
 import { hashPassword, verifyPassword } from './password'
 
 describe('Password Hashing Utilities', () => {
@@ -37,7 +37,7 @@ describe('Password Hashing Utilities', () => {
 
       // Hashes should be different due to salt
       expect(hash1).not.toBe(hash2)
-      
+
       // But both should verify correctly
       expect(await verifyPassword(password, hash1)).toBe(true)
       expect(await verifyPassword(password, hash2)).toBe(true)
@@ -79,27 +79,24 @@ describe('Password Hashing Utilities', () => {
   describe('Property-Based Tests', () => {
     /**
      * **Validates: Requirements 10.1, 10.2**
-     * 
+     *
      * Property 19: 密码哈希验证对称性
-     * 
+     *
      * For any password string, if hashPassword(password) generates hash h,
      * then verifyPassword(password, h) must return true
      */
     it('Property 19: Password hash verification symmetry - Requirements 10.1, 10.2', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          fc.string({ minLength: 0, maxLength: 100 }),
-          async (password) => {
-            // Hash the password
-            const hash = await hashPassword(password)
-            
-            // Verify that the original password matches the hash
-            const isValid = await verifyPassword(password, hash)
-            
-            // Property: verification must always succeed for the original password
-            expect(isValid).toBe(true)
-          }
-        ),
+        fc.asyncProperty(fc.string({ minLength: 0, maxLength: 100 }), async (password) => {
+          // Hash the password
+          const hash = await hashPassword(password)
+
+          // Verify that the original password matches the hash
+          const isValid = await verifyPassword(password, hash)
+
+          // Property: verification must always succeed for the original password
+          expect(isValid).toBe(true)
+        }),
         { numRuns: 50 }
       )
     }, 60000)
@@ -112,13 +109,13 @@ describe('Password Hashing Utilities', () => {
           async (password1, password2) => {
             // Skip if passwords are the same
             fc.pre(password1 !== password2)
-            
+
             // Hash the first password
             const hash = await hashPassword(password1)
-            
+
             // Verify that the second password does not match
             const isValid = await verifyPassword(password2, hash)
-            
+
             // Property: different passwords should not verify
             expect(isValid).toBe(false)
           }
@@ -129,34 +126,28 @@ describe('Password Hashing Utilities', () => {
 
     it('Property: Hash should never equal the original password', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          fc.string({ minLength: 0, maxLength: 100 }),
-          async (password) => {
-            // Hash the password
-            const hash = await hashPassword(password)
-            
-            // Property: hash should never be the same as the original password
-            expect(hash).not.toBe(password)
-          }
-        ),
+        fc.asyncProperty(fc.string({ minLength: 0, maxLength: 100 }), async (password) => {
+          // Hash the password
+          const hash = await hashPassword(password)
+
+          // Property: hash should never be the same as the original password
+          expect(hash).not.toBe(password)
+        }),
         { numRuns: 50 }
       )
     }, 60000)
 
     it('Property: Hash should be non-empty for any password', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          fc.string({ minLength: 0, maxLength: 100 }),
-          async (password) => {
-            // Hash the password
-            const hash = await hashPassword(password)
-            
-            // Property: hash should always be non-empty
-            expect(hash).toBeDefined()
-            expect(hash.length).toBeGreaterThan(0)
-            expect(typeof hash).toBe('string')
-          }
-        ),
+        fc.asyncProperty(fc.string({ minLength: 0, maxLength: 100 }), async (password) => {
+          // Hash the password
+          const hash = await hashPassword(password)
+
+          // Property: hash should always be non-empty
+          expect(hash).toBeDefined()
+          expect(hash.length).toBeGreaterThan(0)
+          expect(typeof hash).toBe('string')
+        }),
         { numRuns: 50 }
       )
     }, 60000)

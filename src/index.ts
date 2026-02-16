@@ -1,11 +1,11 @@
 import { Hono } from 'hono'
 import { errorHandler } from './middleware/errorHandler'
-import users from './routes/users'
+import articles from './routes/articles'
 import channels from './routes/channels'
 import dictionaries from './routes/dictionaries'
-import promos from './routes/promos'
-import articles from './routes/articles'
 import images from './routes/images'
+import promos from './routes/promos'
+import users from './routes/users'
 
 // Define the environment bindings
 export interface Env {
@@ -30,7 +30,7 @@ app.get('/health', (c) => {
   return c.json({
     status: 'ok',
     environment: c.env.ENVIRONMENT || 'development',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 })
 
@@ -39,7 +39,7 @@ app.get('/api/v1', (c) => {
   return c.json({
     version: 'v1',
     name: 'Cloudflare CMS API',
-    description: 'Multi-site content management system API'
+    description: 'Multi-site content management system API',
   })
 })
 

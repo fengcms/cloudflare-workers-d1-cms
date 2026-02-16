@@ -4,58 +4,58 @@
 
 // 状态枚举（所有表通用）
 export enum StatusEnum {
-  PENDING = 'PENDING',    // 待审核
-  NORMAL = 'NORMAL',      // 审核通过
-  FAILURE = 'FAILURE',    // 审核未通过
-  DELETE = 'DELETE'       // 已删除（软删除）
+  PENDING = 'PENDING', // 待审核
+  NORMAL = 'NORMAL', // 审核通过
+  FAILURE = 'FAILURE', // 审核未通过
+  DELETE = 'DELETE', // 已删除（软删除）
 }
 
 // 用户类型枚举
 export enum UserTypeEnum {
   SUPERMANAGE = 'SUPERMANAGE', // 超级管理员
-  MANAGE = 'MANAGE',           // 站点管理员
-  EDITOR = 'EDITOR',           // 文章编辑
-  USER = 'USER'                // 普通用户
+  MANAGE = 'MANAGE', // 站点管理员
+  EDITOR = 'EDITOR', // 文章编辑
+  USER = 'USER', // 普通用户
 }
 
 // 用户性别枚举
 export enum GenderEnum {
-  MALE = 'MALE',         // 男
-  FEMALE = 'FEMALE',     // 女
-  UNKNOWN = 'UNKNOWN'    // 未知
+  MALE = 'MALE', // 男
+  FEMALE = 'FEMALE', // 女
+  UNKNOWN = 'UNKNOWN', // 未知
 }
 
 // 编辑器类型枚举
 export enum EditorEnum {
   RICHTEXT = 'RICHTEXT', // 富文本编辑器
-  MARKDOWN = 'MARKDOWN'  // Markdown编辑器
+  MARKDOWN = 'MARKDOWN', // Markdown编辑器
 }
 
 // 字典类型枚举
 export enum DictTypeEnum {
-  AUTHOR = 'AUTHOR',     // 作者字典
-  ORIGIN = 'ORIGIN',     // 文章来源字典
-  TAG = 'TAG',           // 标签字典
-  FRIENDLINK = 'FRIENDLINK' // 友情链接字典
+  AUTHOR = 'AUTHOR', // 作者字典
+  ORIGIN = 'ORIGIN', // 文章来源字典
+  TAG = 'TAG', // 标签字典
+  FRIENDLINK = 'FRIENDLINK', // 友情链接字典
 }
 
 // 栏目类型枚举
 export enum ChannelTypeEnum {
-  ARTICLE = 'ARTICLE'    // 文章栏目（默认，后续可扩展）
+  ARTICLE = 'ARTICLE', // 文章栏目（默认，后续可扩展）
 }
 
 // 文章类型枚举
 export enum ArticleTypeEnum {
-  NORMAL = 'NORMAL',     // 普通文章（默认）
-  HOT = 'HOT',           // 热门文章
-  MEDIA = 'MEDIA'        // 媒体文章（含视频等）
+  NORMAL = 'NORMAL', // 普通文章（默认）
+  HOT = 'HOT', // 热门文章
+  MEDIA = 'MEDIA', // 媒体文章（含视频等）
 }
 
 // 日志操作类型枚举
 export enum LogTypeEnum {
-  POST = 'POST',         // 新增操作
-  PUT = 'PUT',           // 修改操作
-  DELETE = 'DELETE'      // 删除操作
+  POST = 'POST', // 新增操作
+  PUT = 'PUT', // 修改操作
+  DELETE = 'DELETE', // 删除操作
 }
 
 // 业务状态码枚举（前后端同步）
@@ -63,19 +63,19 @@ export enum BusinessCode {
   // 通用成功
   SUCCESS = 200,
   // 通用错误
-  BAD_REQUEST = 400,    // 参数错误
-  UNAUTHORIZED = 401,   // 未登录/Token失效
-  FORBIDDEN = 403,      // 权限不足
-  NOT_FOUND = 404,      // 资源不存在
-  CONFLICT = 409,       // 数据冲突（如账号已存在）
+  BAD_REQUEST = 400, // 参数错误
+  UNAUTHORIZED = 401, // 未登录/Token失效
+  FORBIDDEN = 403, // 权限不足
+  NOT_FOUND = 404, // 资源不存在
+  CONFLICT = 409, // 数据冲突（如账号已存在）
   TOO_MANY_REQUESTS = 429, // 请求限流
-  SERVER_ERROR = 500,   // 业务逻辑异常（如数据库操作失败）
+  SERVER_ERROR = 500, // 业务逻辑异常（如数据库操作失败）
   // 业务专属错误
   ARTICLE_STATUS_ERROR = 10001, // 文章状态异常
-  USER_PASSWORD_ERROR = 10002,  // 密码错误
-  FILE_UPLOAD_ERROR = 10003,    // 文件上传失败
-  TOKEN_EXPIRED = 10004,        // Token过期
-  SIGNATURE_ERROR = 10005       // 签名验证失败
+  USER_PASSWORD_ERROR = 10002, // 密码错误
+  FILE_UPLOAD_ERROR = 10003, // 文件上传失败
+  TOKEN_EXPIRED = 10004, // Token过期
+  SIGNATURE_ERROR = 10005, // 签名验证失败
 }
 
 // 模块枚举
@@ -86,7 +86,7 @@ export enum ModuleEnum {
   SITE = 'SITE',
   DICTS = 'DICTS',
   PROMO = 'PROMO',
-  SYSTEM = 'SYSTEM'
+  SYSTEM = 'SYSTEM',
 }
 
 // ============================================================================
@@ -167,7 +167,7 @@ export interface User {
   site_id: number | null
   status: StatusEnum
   last_login_time: Date | null
-  evm_address: string | null  // EVM 钱包地址（可选）
+  evm_address: string | null // EVM 钱包地址（可选）
   created_at: Date
   update_at: Date
 }
@@ -224,19 +224,19 @@ export interface Log {
 export interface QueryParams {
   // 过滤参数
   filters?: Record<string, any>
-  
+
   // 排序参数
   sort?: string
   sortOrder?: 'asc' | 'desc'
-  
+
   // 分页参数
   page?: number
   pageSize?: number
-  
+
   // 搜索参数
   search?: string
   searchFields?: string[]
-  
+
   // 比较运算符
   comparisons?: {
     field: string
@@ -395,7 +395,7 @@ export interface CreateUserInput {
   phone?: string
   gender?: GenderEnum
   type?: UserTypeEnum
-  evm_address?: string  // EVM 钱包地址（可选）
+  evm_address?: string // EVM 钱包地址（可选）
 }
 
 // 用户更新输入
@@ -409,20 +409,20 @@ export interface UpdateUserInput {
   gender?: GenderEnum
   type?: UserTypeEnum
   status?: StatusEnum
-  evm_address?: string  // EVM 钱包地址（可选）
+  evm_address?: string // EVM 钱包地址（可选）
 }
 
 // EVM 钱包登录请求
 export interface WalletLoginRequest {
-  evmAddress: string    // EVM 钱包地址
-  signature: string     // 签名
-  message: string       // 被签名的消息（nonce）
+  evmAddress: string // EVM 钱包地址
+  signature: string // 签名
+  message: string // 被签名的消息（nonce）
 }
 
 // 钱包登录 nonce 响应
 export interface WalletNonceResponse {
-  message: string       // 需要签名的消息
-  timestamp: number     // 时间戳
+  message: string // 需要签名的消息
+  timestamp: number // 时间戳
 }
 
 // 字典创建输入

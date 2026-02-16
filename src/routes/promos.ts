@@ -1,46 +1,39 @@
 /**
  * 推广路由
- * 
+ *
  * 实现推广管理相关的 API 端点：
  * - POST /api/v1/promo - 创建推广（需要 MANAGE 或更高权限）
  * - PUT /api/v1/promo/:id - 更新推广（需要 MANAGE 或更高权限）
  * - DELETE /api/v1/promo/:id - 删除推广（需要 MANAGE 或更高权限）
  * - GET /api/v1/promo/active - 获取活动推广（需要认证）
  * - PUT /api/v1/promo/:id/toggle - 切换推广状态（需要 MANAGE 或更高权限）
- * 
+ *
  * **验证需求**: 7.1, 7.2, 7.3, 7.4, 7.6
  */
 
-import { Hono } from 'hono'
-import type { Context } from 'hono'
 import { drizzle } from 'drizzle-orm/d1'
-import { PromoService } from '../services/promoService'
-import { CacheManager } from '../services/cacheManager'
-import { authMiddleware, getAuthContext } from '../middleware/auth'
-import { siteMiddleware, getSiteContext } from '../middleware/site'
+import type { Context } from 'hono'
+import { Hono } from 'hono'
+import { AuthorizationError, ValidationError } from '../errors'
 import { auditMiddleware } from '../middleware/audit'
+import { authMiddleware, getAuthContext } from '../middleware/auth'
+import { getSiteContext, siteMiddleware } from '../middleware/site'
+import { CacheManager } from '../services/cacheManager'
+import { PromoService } from '../services/promoService'
+import { type CreatePromoInput, type UpdatePromoInput, UserTypeEnum } from '../types'
 import { checkPermission } from '../utils/authorization'
 import { successResponse } from '../utils/response'
-import { 
-  AuthorizationError, 
-  ValidationError 
-} from '../errors'
-import { 
-  UserTypeEnum, 
-  CreatePromoInput, 
-  UpdatePromoInput 
-} from '../types'
 
 const promos = new Hono()
 
 /**
  * POST /api/v1/promos
  * 创建推广（需要 MANAGE 或更高权限）
- * 
+ *
  * 请求体：CreatePromoInput
- * 
+ *
  * 响应：Promo
- * 
+ *
  * **验证需求**: 7.1
  */
 promos.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Context) => {
@@ -53,7 +46,7 @@ promos.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Cont
   }
 
   // 获取请求体
-  const body = await c.req.json() as CreatePromoInput
+  const body = (await c.req.json()) as CreatePromoInput
 
   // 验证必填字段
   if (!body.title) {
@@ -76,14 +69,14 @@ promos.post('/', authMiddleware, siteMiddleware, auditMiddleware, async (c: Cont
 /**
  * PUT /api/v1/promos/:id
  * 更新推广（需要 MANAGE 或更高权限）
- * 
+ *
  * 路径参数：
  * - id: number - 推广ID
- * 
+ *
  * 请求体：UpdatePromoInput
- * 
+ *
  * 响应：Promo
- * 
+ *
  * **验证需求**: 7.2
  */
 promos.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: Context) => {
@@ -102,7 +95,7 @@ promos.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: Co
   }
 
   // 获取请求体
-  const body = await c.req.json() as UpdatePromoInput
+  const body = (await c.req.json()) as UpdatePromoInput
 
   // 创建缓存管理器实例
   const cacheManager = new CacheManager(c.env.CACHE)
@@ -120,12 +113,12 @@ promos.put('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: Co
 /**
  * DELETE /api/v1/promos/:id
  * 删除推广（需要 MANAGE 或更高权限）
- * 
+ *
  * 路径参数：
  * - id: number - 推广ID
- * 
+ *
  * 响应：成功消息
- * 
+ *
  * **验证需求**: 7.3, 7.4
  */
 promos.delete('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c: Context) => {
@@ -159,9 +152,9 @@ promos.delete('/:id', authMiddleware, siteMiddleware, auditMiddleware, async (c:
 /**
  * GET /api/v1/promos/active
  * 获取活动推广（需要认证）
- * 
+ *
  * 响应：Promo[]
- * 
+ *
  * **验证需求**: 7.2, 7.3, 7.5
  */
 promos.get('/active', authMiddleware, siteMiddleware, async (c: Context) => {
@@ -183,12 +176,12 @@ promos.get('/active', authMiddleware, siteMiddleware, async (c: Context) => {
 /**
  * PUT /api/v1/promos/:id/toggle
  * 切换推广状态（需要 MANAGE 或更高权限）
- * 
+ *
  * 路径参数：
  * - id: number - 推广ID
- * 
+ *
  * 响应：Promo
- * 
+ *
  * **验证需求**: 7.6
  */
 promos.put('/:id/toggle', authMiddleware, siteMiddleware, auditMiddleware, async (c: Context) => {

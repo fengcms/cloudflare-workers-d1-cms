@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { successResponse, errorResponse } from './response'
-import type { SuccessResponse, ErrorResponse } from '../types'
+import { describe, expect, it } from 'vitest'
+import type { ErrorResponse, SuccessResponse } from '../types'
+import { errorResponse, successResponse } from './response'
 
 describe('Response Formatting Utilities', () => {
   describe('successResponse', () => {
@@ -10,7 +10,7 @@ describe('Response Formatting Utilities', () => {
 
       expect(response).toEqual({
         success: true,
-        data: { id: 1, name: 'Test' }
+        data: { id: 1, name: 'Test' },
       })
     })
 
@@ -19,7 +19,7 @@ describe('Response Formatting Utilities', () => {
 
       expect(response).toEqual({
         success: true,
-        data: null
+        data: null,
       })
     })
 
@@ -29,7 +29,7 @@ describe('Response Formatting Utilities', () => {
 
       expect(response).toEqual({
         success: true,
-        data: [{ id: 1 }, { id: 2 }]
+        data: [{ id: 1 }, { id: 2 }],
       })
     })
 
@@ -39,7 +39,7 @@ describe('Response Formatting Utilities', () => {
         total: 10,
         page: 1,
         pageSize: 2,
-        totalPages: 5
+        totalPages: 5,
       }
       const response = successResponse(data)
 
@@ -50,8 +50,8 @@ describe('Response Formatting Utilities', () => {
           total: 10,
           page: 1,
           pageSize: 2,
-          totalPages: 5
-        }
+          totalPages: 5,
+        },
       })
     })
 
@@ -72,15 +72,15 @@ describe('Response Formatting Utilities', () => {
         success: false,
         error: {
           code: 'BAD_REQUEST',
-          message: 'Invalid input'
-        }
+          message: 'Invalid input',
+        },
       })
     })
 
     it('should include details when provided', () => {
       const details = {
         username: ['Username is required'],
-        email: ['Email format is invalid']
+        email: ['Email format is invalid'],
       }
       const response = errorResponse('VALIDATION_ERROR', 'Validation failed', details)
 
@@ -91,9 +91,9 @@ describe('Response Formatting Utilities', () => {
           message: 'Validation failed',
           details: {
             username: ['Username is required'],
-            email: ['Email format is invalid']
-          }
-        }
+            email: ['Email format is invalid'],
+          },
+        },
       })
     })
 
@@ -104,8 +104,8 @@ describe('Response Formatting Utilities', () => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Resource not found'
-        }
+          message: 'Resource not found',
+        },
       })
       expect(response.error).not.toHaveProperty('details')
     })

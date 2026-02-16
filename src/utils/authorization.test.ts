@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest'
 import * as fc from 'fast-check'
-import { checkPermission, getRoleLevel, compareRoles } from './authorization'
+import { describe, expect, it } from 'vitest'
 import { UserTypeEnum } from '../types'
+import { checkPermission, compareRoles, getRoleLevel } from './authorization'
 
 describe('Authorization Utilities', () => {
   describe('Unit Tests', () => {
@@ -44,7 +44,9 @@ describe('Authorization Utilities', () => {
       })
 
       it('should maintain hierarchy order', () => {
-        expect(getRoleLevel(UserTypeEnum.SUPERMANAGE)).toBeGreaterThan(getRoleLevel(UserTypeEnum.MANAGE))
+        expect(getRoleLevel(UserTypeEnum.SUPERMANAGE)).toBeGreaterThan(
+          getRoleLevel(UserTypeEnum.MANAGE)
+        )
         expect(getRoleLevel(UserTypeEnum.MANAGE)).toBeGreaterThan(getRoleLevel(UserTypeEnum.EDITOR))
         expect(getRoleLevel(UserTypeEnum.EDITOR)).toBeGreaterThan(getRoleLevel(UserTypeEnum.USER))
       })
@@ -75,12 +77,12 @@ describe('Authorization Utilities', () => {
   describe('Property-Based Tests', () => {
     /**
      * **Validates: Requirements 4.2, 4.3, 4.4, 4.5**
-     * 
+     *
      * 属性 8: 角色权限层级
-     * 
+     *
      * 对于任何操作，如果 USER 角色被拒绝访问，则 EDITOR、MANAGE 和 SUPERMANAGE 角色
      * 的权限检查结果应该保持一致或更宽松
-     * 
+     *
      * 这个属性验证了角色权限的单调性：更高级别的角色永远不会比低级别的角色拥有更少的权限
      */
     it('Property 8: Role permission hierarchy - Requirements 4.2, 4.3, 4.4, 4.5', () => {
@@ -89,14 +91,11 @@ describe('Authorization Utilities', () => {
         UserTypeEnum.USER,
         UserTypeEnum.EDITOR,
         UserTypeEnum.MANAGE,
-        UserTypeEnum.SUPERMANAGE
+        UserTypeEnum.SUPERMANAGE,
       ]
 
       // 生成角色对的任意值
-      const rolePairArbitrary = fc.tuple(
-        fc.constantFrom(...allRoles),
-        fc.constantFrom(...allRoles)
-      )
+      const rolePairArbitrary = fc.tuple(fc.constantFrom(...allRoles), fc.constantFrom(...allRoles))
 
       fc.assert(
         fc.property(rolePairArbitrary, ([userRole, requiredRole]) => {
@@ -108,7 +107,7 @@ describe('Authorization Utilities', () => {
           if (hasPermission) {
             // 检查所有更高级别的角色
             const userLevel = getRoleLevel(userRole)
-            allRoles.forEach(higherRole => {
+            allRoles.forEach((higherRole) => {
               const higherLevel = getRoleLevel(higherRole)
               if (higherLevel > userLevel) {
                 // 更高级别的角色必须也有权限
@@ -119,10 +118,10 @@ describe('Authorization Utilities', () => {
 
           // 属性 2: 权限检查的传递性
           // 如果 A >= B 且 B >= C，则 A >= C
-          allRoles.forEach(intermediateRole => {
+          allRoles.forEach((intermediateRole) => {
             const canUserAccessIntermediate = checkPermission(userRole, intermediateRole)
             const canIntermediateAccessRequired = checkPermission(intermediateRole, requiredRole)
-            
+
             if (canUserAccessIntermediate && canIntermediateAccessRequired) {
               // 如果用户可以访问中间角色，且中间角色可以访问所需角色
               // 那么用户应该可以访问所需角色
@@ -137,7 +136,10 @@ describe('Authorization Utilities', () => {
           expect(checkPermission(userRole, userRole)).toBe(true)
 
           // 属性 5: 如果 USER 被拒绝，验证层级一致性
-          if (requiredRole !== UserTypeEnum.USER && !checkPermission(UserTypeEnum.USER, requiredRole)) {
+          if (
+            requiredRole !== UserTypeEnum.USER &&
+            !checkPermission(UserTypeEnum.USER, requiredRole)
+          ) {
             // USER 被拒绝访问非 USER 级别的操作
             // 验证更高级别的角色权限是一致的或更宽松的
             const editorHasPermission = checkPermission(UserTypeEnum.EDITOR, requiredRole)
@@ -159,7 +161,7 @@ describe('Authorization Utilities', () => {
 
     /**
      * 属性：角色级别的单调性
-     * 
+     *
      * 验证角色级别是严格单调递增的，没有两个不同的角色有相同的级别
      */
     it('Property: Role level monotonicity', () => {
@@ -167,14 +169,13 @@ describe('Authorization Utilities', () => {
         UserTypeEnum.USER,
         UserTypeEnum.EDITOR,
         UserTypeEnum.MANAGE,
-        UserTypeEnum.SUPERMANAGE
+        UserTypeEnum.SUPERMANAGE,
       ]
 
       // 生成两个不同角色的任意值
-      const differentRolesArbitrary = fc.tuple(
-        fc.constantFrom(...allRoles),
-        fc.constantFrom(...allRoles)
-      ).filter(([role1, role2]) => role1 !== role2)
+      const differentRolesArbitrary = fc
+        .tuple(fc.constantFrom(...allRoles), fc.constantFrom(...allRoles))
+        .filter(([role1, role2]) => role1 !== role2)
 
       fc.assert(
         fc.property(differentRolesArbitrary, ([role1, role2]) => {
@@ -198,7 +199,7 @@ describe('Authorization Utilities', () => {
 
     /**
      * 属性：权限检查的对称性
-     * 
+     *
      * 如果角色 A 可以访问角色 B 的操作，那么角色 B 不能访问角色 A 的操作
      * （除非它们是同一个角色）
      */
@@ -207,13 +208,10 @@ describe('Authorization Utilities', () => {
         UserTypeEnum.USER,
         UserTypeEnum.EDITOR,
         UserTypeEnum.MANAGE,
-        UserTypeEnum.SUPERMANAGE
+        UserTypeEnum.SUPERMANAGE,
       ]
 
-      const rolePairArbitrary = fc.tuple(
-        fc.constantFrom(...allRoles),
-        fc.constantFrom(...allRoles)
-      )
+      const rolePairArbitrary = fc.tuple(fc.constantFrom(...allRoles), fc.constantFrom(...allRoles))
 
       fc.assert(
         fc.property(rolePairArbitrary, ([role1, role2]) => {
@@ -245,7 +243,7 @@ describe('Authorization Utilities', () => {
 
     /**
      * 属性：角色比较的一致性
-     * 
+     *
      * compareRoles 的结果必须与 checkPermission 的结果一致
      */
     it('Property: Role comparison consistency with permission check', () => {
@@ -253,13 +251,10 @@ describe('Authorization Utilities', () => {
         UserTypeEnum.USER,
         UserTypeEnum.EDITOR,
         UserTypeEnum.MANAGE,
-        UserTypeEnum.SUPERMANAGE
+        UserTypeEnum.SUPERMANAGE,
       ]
 
-      const rolePairArbitrary = fc.tuple(
-        fc.constantFrom(...allRoles),
-        fc.constantFrom(...allRoles)
-      )
+      const rolePairArbitrary = fc.tuple(fc.constantFrom(...allRoles), fc.constantFrom(...allRoles))
 
       fc.assert(
         fc.property(rolePairArbitrary, ([userRole, requiredRole]) => {
@@ -279,7 +274,7 @@ describe('Authorization Utilities', () => {
 
     /**
      * 属性：SUPERMANAGE 的全能性
-     * 
+     *
      * SUPERMANAGE 角色必须能够访问所有操作，无论所需角色是什么
      */
     it('Property: SUPERMANAGE omnipotence', () => {
@@ -287,29 +282,26 @@ describe('Authorization Utilities', () => {
         UserTypeEnum.USER,
         UserTypeEnum.EDITOR,
         UserTypeEnum.MANAGE,
-        UserTypeEnum.SUPERMANAGE
+        UserTypeEnum.SUPERMANAGE,
       ]
 
       fc.assert(
-        fc.property(
-          fc.constantFrom(...allRoles),
-          (requiredRole) => {
-            // SUPERMANAGE 必须能够访问任何级别的操作
-            expect(checkPermission(UserTypeEnum.SUPERMANAGE, requiredRole)).toBe(true)
-            
-            // SUPERMANAGE 的级别必须是最高的
-            expect(getRoleLevel(UserTypeEnum.SUPERMANAGE)).toBeGreaterThanOrEqual(
-              getRoleLevel(requiredRole)
-            )
-          }
-        ),
+        fc.property(fc.constantFrom(...allRoles), (requiredRole) => {
+          // SUPERMANAGE 必须能够访问任何级别的操作
+          expect(checkPermission(UserTypeEnum.SUPERMANAGE, requiredRole)).toBe(true)
+
+          // SUPERMANAGE 的级别必须是最高的
+          expect(getRoleLevel(UserTypeEnum.SUPERMANAGE)).toBeGreaterThanOrEqual(
+            getRoleLevel(requiredRole)
+          )
+        }),
         { numRuns: 50 }
       )
     })
 
     /**
      * 属性：USER 的最小权限
-     * 
+     *
      * USER 角色只能访问 USER 级别的操作，不能访问更高级别的操作
      */
     it('Property: USER minimal permissions', () => {
@@ -317,29 +309,24 @@ describe('Authorization Utilities', () => {
         UserTypeEnum.USER,
         UserTypeEnum.EDITOR,
         UserTypeEnum.MANAGE,
-        UserTypeEnum.SUPERMANAGE
+        UserTypeEnum.SUPERMANAGE,
       ]
 
       fc.assert(
-        fc.property(
-          fc.constantFrom(...allRoles),
-          (requiredRole) => {
-            const hasPermission = checkPermission(UserTypeEnum.USER, requiredRole)
+        fc.property(fc.constantFrom(...allRoles), (requiredRole) => {
+          const hasPermission = checkPermission(UserTypeEnum.USER, requiredRole)
 
-            if (requiredRole === UserTypeEnum.USER) {
-              // USER 可以访问 USER 级别的操作
-              expect(hasPermission).toBe(true)
-            } else {
-              // USER 不能访问更高级别的操作
-              expect(hasPermission).toBe(false)
-            }
-
-            // USER 的级别必须是最低的
-            expect(getRoleLevel(UserTypeEnum.USER)).toBeLessThanOrEqual(
-              getRoleLevel(requiredRole)
-            )
+          if (requiredRole === UserTypeEnum.USER) {
+            // USER 可以访问 USER 级别的操作
+            expect(hasPermission).toBe(true)
+          } else {
+            // USER 不能访问更高级别的操作
+            expect(hasPermission).toBe(false)
           }
-        ),
+
+          // USER 的级别必须是最低的
+          expect(getRoleLevel(UserTypeEnum.USER)).toBeLessThanOrEqual(getRoleLevel(requiredRole))
+        }),
         { numRuns: 50 }
       )
     })

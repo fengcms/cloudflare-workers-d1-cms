@@ -1,20 +1,20 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   AppError,
-  ValidationError,
   AuthenticationError,
   AuthorizationError,
-  NotFoundError,
   ConflictError,
   InternalError,
-  toErrorResponse
+  NotFoundError,
+  toErrorResponse,
+  ValidationError,
 } from './index'
 
 describe('Error Classes', () => {
   describe('AppError', () => {
     it('should create an error with message and status code', () => {
       const error = new AppError('Test error', 400, 'TEST_ERROR')
-      
+
       expect(error.message).toBe('Test error')
       expect(error.statusCode).toBe(400)
       expect(error.code).toBe('TEST_ERROR')
@@ -24,7 +24,7 @@ describe('Error Classes', () => {
 
     it('should capture stack trace', () => {
       const error = new AppError('Test error', 400)
-      
+
       expect(error.stack).toBeDefined()
     })
   })
@@ -32,7 +32,7 @@ describe('Error Classes', () => {
   describe('ValidationError', () => {
     it('should create validation error with 400 status code', () => {
       const error = new ValidationError('验证失败')
-      
+
       expect(error.message).toBe('验证失败')
       expect(error.statusCode).toBe(400)
       expect(error.code).toBe('VALIDATION_ERROR')
@@ -42,16 +42,16 @@ describe('Error Classes', () => {
     it('should include validation details', () => {
       const details = {
         username: ['用户名不能为空', '用户名长度必须在3-50之间'],
-        email: ['邮箱格式不正确']
+        email: ['邮箱格式不正确'],
       }
       const error = new ValidationError('验证失败', details)
-      
+
       expect(error.details).toEqual(details)
     })
 
     it('should work without details', () => {
       const error = new ValidationError('验证失败')
-      
+
       expect(error.details).toBeUndefined()
     })
   })
@@ -59,7 +59,7 @@ describe('Error Classes', () => {
   describe('AuthenticationError', () => {
     it('should create authentication error with 401 status code', () => {
       const error = new AuthenticationError()
-      
+
       expect(error.message).toBe('未授权访问')
       expect(error.statusCode).toBe(401)
       expect(error.code).toBe('AUTHENTICATION_ERROR')
@@ -68,7 +68,7 @@ describe('Error Classes', () => {
 
     it('should accept custom message', () => {
       const error = new AuthenticationError('Token 已过期')
-      
+
       expect(error.message).toBe('Token 已过期')
       expect(error.statusCode).toBe(401)
     })
@@ -77,7 +77,7 @@ describe('Error Classes', () => {
   describe('AuthorizationError', () => {
     it('should create authorization error with 403 status code', () => {
       const error = new AuthorizationError()
-      
+
       expect(error.message).toBe('权限不足')
       expect(error.statusCode).toBe(403)
       expect(error.code).toBe('AUTHORIZATION_ERROR')
@@ -86,7 +86,7 @@ describe('Error Classes', () => {
 
     it('should accept custom message', () => {
       const error = new AuthorizationError('需要管理员权限')
-      
+
       expect(error.message).toBe('需要管理员权限')
       expect(error.statusCode).toBe(403)
     })
@@ -95,7 +95,7 @@ describe('Error Classes', () => {
   describe('NotFoundError', () => {
     it('should create not found error with 404 status code', () => {
       const error = new NotFoundError()
-      
+
       expect(error.message).toBe('资源未找到')
       expect(error.statusCode).toBe(404)
       expect(error.code).toBe('NOT_FOUND_ERROR')
@@ -104,7 +104,7 @@ describe('Error Classes', () => {
 
     it('should accept custom message', () => {
       const error = new NotFoundError('文章不存在')
-      
+
       expect(error.message).toBe('文章不存在')
       expect(error.statusCode).toBe(404)
     })
@@ -113,7 +113,7 @@ describe('Error Classes', () => {
   describe('ConflictError', () => {
     it('should create conflict error with 409 status code', () => {
       const error = new ConflictError('用户名已存在')
-      
+
       expect(error.message).toBe('用户名已存在')
       expect(error.statusCode).toBe(409)
       expect(error.code).toBe('CONFLICT_ERROR')
@@ -124,7 +124,7 @@ describe('Error Classes', () => {
   describe('InternalError', () => {
     it('should create internal error with 500 status code', () => {
       const error = new InternalError()
-      
+
       expect(error.message).toBe('服务器内部错误')
       expect(error.statusCode).toBe(500)
       expect(error.code).toBe('INTERNAL_ERROR')
@@ -133,7 +133,7 @@ describe('Error Classes', () => {
 
     it('should accept custom message', () => {
       const error = new InternalError('数据库连接失败')
-      
+
       expect(error.message).toBe('数据库连接失败')
       expect(error.statusCode).toBe(500)
     })
@@ -174,7 +174,7 @@ describe('Error Classes', () => {
     it('should convert ValidationError to error response', () => {
       const details = {
         username: ['用户名不能为空'],
-        email: ['邮箱格式不正确']
+        email: ['邮箱格式不正确'],
       }
       const error = new ValidationError('验证失败', details)
       const response = toErrorResponse(error)
@@ -184,8 +184,8 @@ describe('Error Classes', () => {
         error: {
           code: 'VALIDATION_ERROR',
           message: '验证失败',
-          details
-        }
+          details,
+        },
       })
     })
 
@@ -197,8 +197,8 @@ describe('Error Classes', () => {
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: '验证失败'
-        }
+          message: '验证失败',
+        },
       })
     })
 
@@ -210,8 +210,8 @@ describe('Error Classes', () => {
         success: false,
         error: {
           code: 'AUTHENTICATION_ERROR',
-          message: 'Token 已过期'
-        }
+          message: 'Token 已过期',
+        },
       })
     })
 
@@ -223,8 +223,8 @@ describe('Error Classes', () => {
         success: false,
         error: {
           code: 'AUTHORIZATION_ERROR',
-          message: '需要管理员权限'
-        }
+          message: '需要管理员权限',
+        },
       })
     })
 
@@ -236,8 +236,8 @@ describe('Error Classes', () => {
         success: false,
         error: {
           code: 'NOT_FOUND_ERROR',
-          message: '文章不存在'
-        }
+          message: '文章不存在',
+        },
       })
     })
 
@@ -249,8 +249,8 @@ describe('Error Classes', () => {
         success: false,
         error: {
           code: 'CONFLICT_ERROR',
-          message: '用户名已存在'
-        }
+          message: '用户名已存在',
+        },
       })
     })
 
@@ -262,8 +262,8 @@ describe('Error Classes', () => {
         success: false,
         error: {
           code: 'INTERNAL_ERROR',
-          message: '数据库连接失败'
-        }
+          message: '数据库连接失败',
+        },
       })
     })
   })

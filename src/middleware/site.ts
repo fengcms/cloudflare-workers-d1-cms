@@ -1,8 +1,8 @@
 /**
  * 站点隔离中间件
- * 
+ *
  * 需求 1.3：当 Site-Id 请求头缺失时，系统应拒绝请求并返回认证错误
- * 
+ *
  * 功能：
  * 1. 从 Site-Id 头提取 site_id
  * 2. 验证 site_id 存在且有效
@@ -15,9 +15,9 @@ import type { SiteContext } from '../types'
 
 /**
  * 站点隔离中间件
- * 
+ *
  * 从请求头中提取 Site-Id 并验证，将站点上下文附加到请求
- * 
+ *
  * @returns Hono 中间件处理函数
  */
 export const siteMiddleware: MiddlewareHandler = async (c: Context, next) => {
@@ -39,7 +39,7 @@ export const siteMiddleware: MiddlewareHandler = async (c: Context, next) => {
 
   // 构建站点上下文
   const siteContext: SiteContext = {
-    siteId
+    siteId,
   }
 
   // 将站点上下文存储到请求上下文
@@ -51,17 +51,17 @@ export const siteMiddleware: MiddlewareHandler = async (c: Context, next) => {
 
 /**
  * 从请求上下文中获取站点上下文
- * 
+ *
  * @param c Hono 上下文
  * @returns 站点上下文
  * @throws AuthenticationError 如果站点上下文不存在
  */
 export function getSiteContext(c: Context): SiteContext {
   const siteContext = c.get('siteContext') as SiteContext | undefined
-  
+
   if (!siteContext) {
     throw new AuthenticationError('未找到站点上下文')
   }
-  
+
   return siteContext
 }

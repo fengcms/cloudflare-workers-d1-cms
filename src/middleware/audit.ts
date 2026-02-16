@@ -1,8 +1,8 @@
 /**
  * 审计日志中间件
- * 
+ *
  * 需求 8.4：当发生任何状态变更操作时，系统应创建审计日志条目
- * 
+ *
  * 功能：
  * 1. 拦截所有状态变更操作（POST、PUT、DELETE 请求）
  * 2. 提取用户上下文（userId、username）
@@ -20,30 +20,33 @@ import { getSiteContext } from './site'
 
 /**
  * 从请求路径提取模块和资源ID
- * 
+ *
  * 路径格式：/api/v1/{module}/{id?}
- * 
+ *
  * @param path 请求路径
  * @returns 模块和资源ID
  */
-function extractResourceInfo(path: string): { module: ModuleEnum | null; resourceId: number | null } {
+function extractResourceInfo(path: string): {
+  module: ModuleEnum | null
+  resourceId: number | null
+} {
   // 移除查询参数
   const cleanPath = path.split('?')[0]
-  
+
   // 分割路径
-  const parts = cleanPath.split('/').filter(p => p !== '')
-  
+  const parts = cleanPath.split('/').filter((p) => p !== '')
+
   // 路径格式：api/v1/{module}/{id?}
   if (parts.length < 3) {
     return { module: null, resourceId: null }
   }
-  
+
   // 提取模块名称（第3部分）
   const moduleName = parts[2].toUpperCase()
-  
+
   // 映射模块名称到 ModuleEnum
   let module: ModuleEnum | null = null
-  
+
   // 处理复数形式到单数形式的映射
   switch (moduleName) {
     case 'ARTICLES':
@@ -72,7 +75,7 @@ function extractResourceInfo(path: string): { module: ModuleEnum | null; resourc
         module = moduleName as ModuleEnum
       }
   }
-  
+
   // 提取资源ID（第4部分，如果存在）
   let resourceId: number | null = null
   if (parts.length >= 4) {
@@ -81,13 +84,13 @@ function extractResourceInfo(path: string): { module: ModuleEnum | null; resourc
       resourceId = id
     }
   }
-  
+
   return { module, resourceId }
 }
 
 /**
  * 从 HTTP 方法映射到日志类型
- * 
+ *
  * @param method HTTP 方法
  * @returns 日志类型
  */
@@ -107,14 +110,14 @@ function mapMethodToLogType(method: string): LogTypeEnum | null {
 
 /**
  * 审计日志中间件
- * 
+ *
  * 拦截所有状态变更操作并记录审计日志
- * 
+ *
  * @returns Hono 中间件处理函数
  */
 export const auditMiddleware: MiddlewareHandler = async (c: Context, next) => {
   const method = c.req.method
-  
+
   // 只拦截状态变更操作（POST、PUT、DELETE）
   const logType = mapMethodToLogType(method)
   if (!logType) {
@@ -122,13 +125,13 @@ export const auditMiddleware: MiddlewareHandler = async (c: Context, next) => {
     await next()
     return
   }
-  
+
   // 执行请求处理
   await next()
-  
+
   // 请求处理完成后，异步记录审计日志（不阻塞响应）
   // 使用 Promise 但不等待，确保日志记录失败不影响请求
-  recordAuditLog(c, logType).catch(error => {
+  recordAuditLog(c, logType).catch((error) => {
     // 日志记录失败，仅记录错误但不影响请求
     console.error('审计日志记录失败:', error)
   })
@@ -136,7 +139,7 @@ export const auditMiddleware: MiddlewareHandler = async (c: Context, next) => {
 
 /**
  * 记录审计日志
- * 
+ *
  * @param c Hono 上下文
  * @param logType 日志类型
  */
@@ -154,7 +157,7 @@ async function recordAuditLog(c: Context, logType: LogTypeEnum): Promise<void> {
       userId = undefined
       username = 'anonymous'
     }
-    
+
     // 提取站点上下文（可能不存在）
     let siteId: number | undefined
     try {
@@ -164,37 +167,41 @@ async function recordAuditLog(c: Context, logType: LogTypeEnum): Promise<void> {
       // 没有站点上下文
       siteId = undefined
     }
-    
+
     // 提取资源信息
     const path = c.req.path
     const { module, resourceId } = extractResourceInfo(path)
-    
+
     // 如果无法识别模块，使用 SYSTEM
     const finalModule = module || ModuleEnum.SYSTEM
-    
+
     // 构建日志内容
-    const content = resourceId 
+    const content = resourceId
       ? `${logType} ${finalModule} #${resourceId}`
       : `${logType} ${finalModule}`
-    
+
     // 提取请求元数据
-    const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || c.req.header('X-Real-IP') || ''
+    const ip =
+      c.req.header('CF-Connecting-IP') ||
+      c.req.header('X-Forwarded-For') ||
+      c.req.header('X-Real-IP') ||
+      ''
     const userAgent = c.req.header('User-Agent') || ''
-    
+
     // 获取数据库实例
     const rawDb = c.env?.DB
     if (!rawDb) {
       console.error('数据库未配置，无法记录审计日志')
       return
     }
-    
+
     // 创建 drizzle 实例
     const { drizzle } = await import('drizzle-orm/d1')
     const db = drizzle(rawDb)
-    
+
     // 创建审计日志服务实例
     const auditLogService = new AuditLogService(db)
-    
+
     // 记录审计日志
     await auditLogService.log({
       user_id: userId,
@@ -204,7 +211,7 @@ async function recordAuditLog(c: Context, logType: LogTypeEnum): Promise<void> {
       content,
       ip,
       user_agent: userAgent,
-      site_id: siteId
+      site_id: siteId,
     })
   } catch (error) {
     // 记录错误但不抛出，确保不影响请求处理

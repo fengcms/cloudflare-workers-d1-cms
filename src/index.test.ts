@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import app from './index'
 
 describe('Cloudflare CMS API - Basic Setup', () => {
@@ -7,7 +7,7 @@ describe('Cloudflare CMS API - Basic Setup', () => {
     const env = {
       ENVIRONMENT: 'development' as const,
       JWT_SECRET: 'test-secret',
-      JWT_EXPIRATION: '7d'
+      JWT_EXPIRATION: '7d',
     } as any
 
     const res = await app.fetch(req, env)
@@ -24,7 +24,7 @@ describe('Cloudflare CMS API - Basic Setup', () => {
     const env = {
       ENVIRONMENT: 'development' as const,
       JWT_SECRET: 'test-secret',
-      JWT_EXPIRATION: '7d'
+      JWT_EXPIRATION: '7d',
     } as any
 
     const res = await app.fetch(req, env)

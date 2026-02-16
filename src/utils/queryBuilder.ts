@@ -1,11 +1,11 @@
-import { SQL, sql, and, or, eq, gt, lt, gte, lte, like, asc, desc } from 'drizzle-orm'
-import { SQLiteColumn } from 'drizzle-orm/sqlite-core'
-import { QueryParams } from '../types'
+import { and, asc, desc, eq, gt, gte, like, lt, lte, or, type SQL, sql } from 'drizzle-orm'
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { StatusEnum } from '../db/schema'
+import type { QueryParams } from '../types'
 
 /**
  * 查询构建器 - 处理通用查询参数
- * 
+ *
  * 功能：
  * - 过滤：精确匹配
  * - 排序：按指定字段升序/降序
@@ -118,25 +118,20 @@ export function buildQuery(
     where,
     orderBy,
     limit,
-    offset
+    offset,
   }
 }
 
 /**
  * 应用站点过滤（用于手动查询）
  */
-export function applySiteFilter(
-  column: SQLiteColumn,
-  siteId: number
-): SQL {
+export function applySiteFilter(column: SQLiteColumn, siteId: number): SQL {
   return eq(column, siteId)
 }
 
 /**
  * 应用软删除过滤（用于手动查询）
  */
-export function applySoftDeleteFilter(
-  column: SQLiteColumn
-): SQL {
+export function applySoftDeleteFilter(column: SQLiteColumn): SQL {
   return sql`${column} != ${StatusEnum.DELETE}`
 }

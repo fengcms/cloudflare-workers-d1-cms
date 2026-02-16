@@ -1,8 +1,7 @@
-import { describe, it, expect } from 'vitest'
-import { buildQuery, applySiteFilter, applySoftDeleteFilter } from './queryBuilder'
-import { articles, channels, users } from '../db/schema'
-import { QueryParams } from '../types'
-import { StatusEnum } from '../db/schema'
+import { describe, expect, it } from 'vitest'
+import { articles, channels, StatusEnum, users } from '../db/schema'
+import type { QueryParams } from '../types'
+import { applySiteFilter, applySoftDeleteFilter, buildQuery } from './queryBuilder'
 
 describe('queryBuilder', () => {
   describe('buildQuery', () => {
@@ -10,7 +9,7 @@ describe('queryBuilder', () => {
       const params: QueryParams = {}
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.where).toBeDefined()
@@ -21,7 +20,7 @@ describe('queryBuilder', () => {
       const params: QueryParams = {}
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.where).toBeDefined()
@@ -33,12 +32,12 @@ describe('queryBuilder', () => {
       const params: QueryParams = {
         filters: {
           channel_id: 5,
-          type: 'NORMAL'
-        }
+          type: 'NORMAL',
+        },
       }
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.where).toBeDefined()
@@ -49,12 +48,12 @@ describe('queryBuilder', () => {
       const params: QueryParams = {
         comparisons: [
           { field: 'id', operator: 'gt', value: 10 },
-          { field: 'id', operator: 'lte', value: 100 }
-        ]
+          { field: 'id', operator: 'lte', value: 100 },
+        ],
       }
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.where).toBeDefined()
@@ -63,11 +62,11 @@ describe('queryBuilder', () => {
     it('should apply search with multiple fields', () => {
       const params: QueryParams = {
         search: 'test',
-        searchFields: ['title', 'content']
+        searchFields: ['title', 'content'],
       }
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.where).toBeDefined()
@@ -77,11 +76,11 @@ describe('queryBuilder', () => {
     it('should build ascending order by', () => {
       const params: QueryParams = {
         sort: 'created_at',
-        sortOrder: 'asc'
+        sortOrder: 'asc',
       }
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.orderBy).toBeDefined()
@@ -90,11 +89,11 @@ describe('queryBuilder', () => {
     it('should build descending order by', () => {
       const params: QueryParams = {
         sort: 'created_at',
-        sortOrder: 'desc'
+        sortOrder: 'desc',
       }
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.orderBy).toBeDefined()
@@ -103,11 +102,11 @@ describe('queryBuilder', () => {
     it('should calculate pagination correctly', () => {
       const params: QueryParams = {
         page: 2,
-        pageSize: 20
+        pageSize: 20,
       }
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.limit).toBe(20)
@@ -118,7 +117,7 @@ describe('queryBuilder', () => {
       const params: QueryParams = {}
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.limit).toBe(10) // default pageSize
@@ -130,7 +129,7 @@ describe('queryBuilder', () => {
       const result = buildQuery(params, {
         siteId: 1,
         tableColumns: articles,
-        hasSiteId: false
+        hasSiteId: false,
       })
 
       expect(result.where?.toString() || '').not.toContain('site_id')
@@ -141,7 +140,7 @@ describe('queryBuilder', () => {
       const result = buildQuery(params, {
         siteId: 1,
         tableColumns: articles,
-        hasStatus: false
+        hasStatus: false,
       })
 
       expect(result.where?.toString() || '').not.toContain('status')
@@ -156,13 +155,11 @@ describe('queryBuilder', () => {
         sortOrder: 'desc',
         page: 2,
         pageSize: 15,
-        comparisons: [
-          { field: 'is_top', operator: 'gte', value: 1 }
-        ]
+        comparisons: [{ field: 'is_top', operator: 'gte', value: 1 }],
       }
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.where).toBeDefined()
@@ -175,12 +172,12 @@ describe('queryBuilder', () => {
       const params: QueryParams = {
         filters: {
           invalid_field: 'value',
-          channel_id: 5
-        }
+          channel_id: 5,
+        },
       }
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.where).toBeDefined()
@@ -192,12 +189,12 @@ describe('queryBuilder', () => {
         filters: {
           channel_id: null,
           type: undefined,
-          is_top: 1
-        }
+          is_top: 1,
+        },
       }
       const result = buildQuery(params, {
         siteId: 1,
-        tableColumns: articles
+        tableColumns: articles,
       })
 
       expect(result.where).toBeDefined()

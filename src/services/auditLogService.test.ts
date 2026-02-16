@@ -1,6 +1,6 @@
 /**
  * Audit Log Service Unit Tests
- * 
+ *
  * Tests the audit logging functionality including:
  * - Creating log entries
  * - Querying logs with various filters
@@ -8,19 +8,19 @@
  * - Immutability (no update/delete methods)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { drizzle } from 'drizzle-orm/d1'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { type CreateLogInput, LogTypeEnum, ModuleEnum } from '../types'
 import { AuditLogService } from './auditLogService'
-import { LogTypeEnum, ModuleEnum, CreateLogInput } from '../types'
 
 // Mock D1 database for testing
 const mockD1 = {
   prepare: () => ({
     bind: () => ({
       all: () => Promise.resolve({ results: [] }),
-      run: () => Promise.resolve({ success: true })
-    })
-  })
+      run: () => Promise.resolve({ success: true }),
+    }),
+  }),
 } as any
 
 describe('AuditLogService', () => {
@@ -42,20 +42,22 @@ describe('AuditLogService', () => {
         content: 'Created article: Test Article',
         ip: '192.168.1.1',
         user_agent: 'Mozilla/5.0',
-        site_id: 1
+        site_id: 1,
       }
 
       // Mock the insert operation
-      const mockInsert = vi.fn().mockResolvedValue([{
-        id: 1,
-        ...logData,
-        created_at: new Date()
-      }])
+      const mockInsert = vi.fn().mockResolvedValue([
+        {
+          id: 1,
+          ...logData,
+          created_at: new Date(),
+        },
+      ])
 
       db.insert = () => ({
         values: () => ({
-          returning: mockInsert
-        })
+          returning: mockInsert,
+        }),
       })
 
       const result = await service.log(logData)
@@ -76,26 +78,28 @@ describe('AuditLogService', () => {
       const logData: CreateLogInput = {
         type: LogTypeEnum.DELETE,
         module: ModuleEnum.USER,
-        content: 'Deleted user'
+        content: 'Deleted user',
       }
 
-      const mockInsert = vi.fn().mockResolvedValue([{
-        id: 2,
-        user_id: null,
-        username: '',
-        type: LogTypeEnum.DELETE,
-        module: ModuleEnum.USER,
-        content: 'Deleted user',
-        ip: '',
-        user_agent: '',
-        site_id: null,
-        created_at: new Date()
-      }])
+      const mockInsert = vi.fn().mockResolvedValue([
+        {
+          id: 2,
+          user_id: null,
+          username: '',
+          type: LogTypeEnum.DELETE,
+          module: ModuleEnum.USER,
+          content: 'Deleted user',
+          ip: '',
+          user_agent: '',
+          site_id: null,
+          created_at: new Date(),
+        },
+      ])
 
       db.insert = () => ({
         values: () => ({
-          returning: mockInsert
-        })
+          returning: mockInsert,
+        }),
       })
 
       const result = await service.log(logData)
@@ -109,30 +113,32 @@ describe('AuditLogService', () => {
 
     it('should record timestamp automatically', async () => {
       const beforeLog = new Date()
-      
+
       const logData: CreateLogInput = {
         type: LogTypeEnum.PUT,
         module: ModuleEnum.CHANNEL,
-        content: 'Updated channel'
+        content: 'Updated channel',
       }
 
-      const mockInsert = vi.fn().mockResolvedValue([{
-        id: 3,
-        user_id: null,
-        username: '',
-        type: LogTypeEnum.PUT,
-        module: ModuleEnum.CHANNEL,
-        content: 'Updated channel',
-        ip: '',
-        user_agent: '',
-        site_id: null,
-        created_at: new Date()
-      }])
+      const mockInsert = vi.fn().mockResolvedValue([
+        {
+          id: 3,
+          user_id: null,
+          username: '',
+          type: LogTypeEnum.PUT,
+          module: ModuleEnum.CHANNEL,
+          content: 'Updated channel',
+          ip: '',
+          user_agent: '',
+          site_id: null,
+          created_at: new Date(),
+        },
+      ])
 
       db.insert = () => ({
         values: () => ({
-          returning: mockInsert
-        })
+          returning: mockInsert,
+        }),
       })
 
       const result = await service.log(logData)
@@ -157,7 +163,7 @@ describe('AuditLogService', () => {
           ip: '192.168.1.1',
           user_agent: 'Mozilla/5.0',
           site_id: 1,
-          created_at: new Date()
+          created_at: new Date(),
         },
         {
           id: 2,
@@ -169,8 +175,8 @@ describe('AuditLogService', () => {
           ip: '192.168.1.2',
           user_agent: 'Chrome',
           site_id: 1,
-          created_at: new Date()
-        }
+          created_at: new Date(),
+        },
       ]
 
       db.select = () => ({
@@ -180,12 +186,12 @@ describe('AuditLogService', () => {
             orderBy: () => ({
               limit: () => ({
                 offset: () => ({
-                  all: vi.fn().mockResolvedValue(mockLogs)
-                })
-              })
-            })
-          })
-        })
+                  all: vi.fn().mockResolvedValue(mockLogs),
+                }),
+              }),
+            }),
+          }),
+        }),
       })
 
       const result = await service.query({})
@@ -207,8 +213,8 @@ describe('AuditLogService', () => {
           ip: '192.168.1.1',
           user_agent: 'Mozilla/5.0',
           site_id: 1,
-          created_at: new Date()
-        }
+          created_at: new Date(),
+        },
       ]
 
       db.select = () => ({
@@ -218,12 +224,12 @@ describe('AuditLogService', () => {
             orderBy: () => ({
               limit: () => ({
                 offset: () => ({
-                  all: vi.fn().mockResolvedValue(mockLogs)
-                })
-              })
-            })
-          })
-        })
+                  all: vi.fn().mockResolvedValue(mockLogs),
+                }),
+              }),
+            }),
+          }),
+        }),
       })
 
       const result = await service.query({ userId: 1 })
@@ -244,8 +250,8 @@ describe('AuditLogService', () => {
           ip: '192.168.1.1',
           user_agent: 'Mozilla/5.0',
           site_id: 1,
-          created_at: new Date()
-        }
+          created_at: new Date(),
+        },
       ]
 
       db.select = () => ({
@@ -255,12 +261,12 @@ describe('AuditLogService', () => {
             orderBy: () => ({
               limit: () => ({
                 offset: () => ({
-                  all: vi.fn().mockResolvedValue(mockLogs)
-                })
-              })
-            })
-          })
-        })
+                  all: vi.fn().mockResolvedValue(mockLogs),
+                }),
+              }),
+            }),
+          }),
+        }),
       })
 
       const result = await service.query({ type: LogTypeEnum.DELETE })
@@ -281,8 +287,8 @@ describe('AuditLogService', () => {
           ip: '192.168.1.1',
           user_agent: 'Mozilla/5.0',
           site_id: 1,
-          created_at: new Date()
-        }
+          created_at: new Date(),
+        },
       ]
 
       db.select = () => ({
@@ -292,12 +298,12 @@ describe('AuditLogService', () => {
             orderBy: () => ({
               limit: () => ({
                 offset: () => ({
-                  all: vi.fn().mockResolvedValue(mockLogs)
-                })
-              })
-            })
-          })
-        })
+                  all: vi.fn().mockResolvedValue(mockLogs),
+                }),
+              }),
+            }),
+          }),
+        }),
       })
 
       const result = await service.query({ module: ModuleEnum.USER })
@@ -309,7 +315,7 @@ describe('AuditLogService', () => {
     it('should filter logs by date range', async () => {
       const startDate = new Date('2024-01-01')
       const endDate = new Date('2024-12-31')
-      
+
       const mockLogs = [
         {
           id: 1,
@@ -321,8 +327,8 @@ describe('AuditLogService', () => {
           ip: '192.168.1.1',
           user_agent: 'Mozilla/5.0',
           site_id: 1,
-          created_at: new Date('2024-06-15')
-        }
+          created_at: new Date('2024-06-15'),
+        },
       ]
 
       db.select = () => ({
@@ -332,12 +338,12 @@ describe('AuditLogService', () => {
             orderBy: () => ({
               limit: () => ({
                 offset: () => ({
-                  all: vi.fn().mockResolvedValue(mockLogs)
-                })
-              })
-            })
-          })
-        })
+                  all: vi.fn().mockResolvedValue(mockLogs),
+                }),
+              }),
+            }),
+          }),
+        }),
       })
 
       const result = await service.query({ startDate, endDate })
@@ -359,8 +365,8 @@ describe('AuditLogService', () => {
           ip: '192.168.1.1',
           user_agent: 'Mozilla/5.0',
           site_id: 2,
-          created_at: new Date()
-        }
+          created_at: new Date(),
+        },
       ]
 
       db.select = () => ({
@@ -370,12 +376,12 @@ describe('AuditLogService', () => {
             orderBy: () => ({
               limit: () => ({
                 offset: () => ({
-                  all: vi.fn().mockResolvedValue(mockLogs)
-                })
-              })
-            })
-          })
-        })
+                  all: vi.fn().mockResolvedValue(mockLogs),
+                }),
+              }),
+            }),
+          }),
+        }),
       })
 
       const result = await service.query({ filters: { site_id: 2 } })
@@ -396,7 +402,7 @@ describe('AuditLogService', () => {
           ip: '192.168.1.1',
           user_agent: 'Mozilla/5.0',
           site_id: 1,
-          created_at: new Date()
+          created_at: new Date(),
         },
         {
           id: 4,
@@ -408,18 +414,19 @@ describe('AuditLogService', () => {
           ip: '192.168.1.1',
           user_agent: 'Mozilla/5.0',
           site_id: 1,
-          created_at: new Date()
-        }
+          created_at: new Date(),
+        },
       ]
 
       // Mock count query
-      db.select = vi.fn()
+      db.select = vi
+        .fn()
         .mockReturnValueOnce({
           from: () => ({
             where: () => ({
-              all: vi.fn().mockResolvedValue(Array(25).fill({ count: 1 }))
-            })
-          })
+              all: vi.fn().mockResolvedValue(Array(25).fill({ count: 1 })),
+            }),
+          }),
         })
         .mockReturnValueOnce({
           from: () => ({
@@ -427,12 +434,12 @@ describe('AuditLogService', () => {
               orderBy: () => ({
                 limit: () => ({
                   offset: () => ({
-                    all: vi.fn().mockResolvedValue(mockLogs)
-                  })
-                })
-              })
-            })
-          })
+                    all: vi.fn().mockResolvedValue(mockLogs),
+                  }),
+                }),
+              }),
+            }),
+          }),
         })
 
       const result = await service.query({ page: 2, pageSize: 10 })
@@ -455,8 +462,8 @@ describe('AuditLogService', () => {
           ip: '192.168.1.1',
           user_agent: 'Mozilla/5.0',
           site_id: 1,
-          created_at: new Date('2024-06-15')
-        }
+          created_at: new Date('2024-06-15'),
+        },
       ]
 
       db.select = () => ({
@@ -466,12 +473,12 @@ describe('AuditLogService', () => {
             orderBy: () => ({
               limit: () => ({
                 offset: () => ({
-                  all: vi.fn().mockResolvedValue(mockLogs)
-                })
-              })
-            })
-          })
-        })
+                  all: vi.fn().mockResolvedValue(mockLogs),
+                }),
+              }),
+            }),
+          }),
+        }),
       })
 
       const result = await service.query({
@@ -480,7 +487,7 @@ describe('AuditLogService', () => {
         module: ModuleEnum.ARTICLE,
         filters: { site_id: 1 },
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-12-31')
+        endDate: new Date('2024-12-31'),
       })
 
       expect(result.data).toHaveLength(1)
@@ -501,9 +508,10 @@ describe('AuditLogService', () => {
     })
 
     it('should only have log and query methods', () => {
-      const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(service))
-        .filter(name => name !== 'constructor')
-      
+      const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(service)).filter(
+        (name) => name !== 'constructor'
+      )
+
       expect(methods).toContain('log')
       expect(methods).toContain('query')
       expect(methods).toHaveLength(2)

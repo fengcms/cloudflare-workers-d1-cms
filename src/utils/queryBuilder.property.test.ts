@@ -1,16 +1,16 @@
-import { describe, it, expect } from 'vitest'
 import { fc } from '@fast-check/vitest'
-import { buildQuery } from './queryBuilder'
-import { articles, StatusEnum } from '../db/schema'
-import { QueryParams } from '../types'
-import { drizzle } from 'drizzle-orm/d1'
 import Database from 'better-sqlite3'
+import { drizzle } from 'drizzle-orm/d1'
+import { describe, expect, it } from 'vitest'
+import { articles, StatusEnum } from '../db/schema'
+import type { QueryParams } from '../types'
+import { buildQuery } from './queryBuilder'
 
 /**
  * 属性 15: 查询过滤精确性
- * 
+ *
  * **验证需求：12.1**
- * 
+ *
  * 对于任何带有过滤参数的查询，返回的所有记录必须满足所有指定的过滤条件
  */
 
@@ -61,7 +61,7 @@ describe('Property 15: 查询过滤精确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 10 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 5, maxLength: 50 }
         ),
@@ -69,7 +69,7 @@ describe('Property 15: 查询过滤精确性', () => {
         fc.record({
           channel_id: fc.option(fc.integer({ min: 1, max: 20 }), { nil: undefined }),
           type: fc.option(fc.constantFrom('NORMAL', 'HOT', 'MEDIA'), { nil: undefined }),
-          is_top: fc.option(fc.integer({ min: 0, max: 1 }), { nil: undefined })
+          is_top: fc.option(fc.integer({ min: 0, max: 1 }), { nil: undefined }),
         }),
         (siteId, testData, filters) => {
           // 清空表
@@ -99,12 +99,12 @@ describe('Property 15: 查询过滤精确性', () => {
           const params: QueryParams = {
             filters: Object.fromEntries(
               Object.entries(filters).filter(([_, v]) => v !== undefined)
-            )
+            ),
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -156,10 +156,11 @@ describe('Property 15: 查询过滤精确性', () => {
           }
 
           // 验证：没有遗漏符合条件的记录
-          const expectedResults = testData.filter(record => {
+          const expectedResults = testData.filter((record) => {
             if (record.site_id !== siteId) return false
             if (record.status === StatusEnum.DELETE) return false
-            if (filters.channel_id !== undefined && record.channel_id !== filters.channel_id) return false
+            if (filters.channel_id !== undefined && record.channel_id !== filters.channel_id)
+              return false
             if (filters.type !== undefined && record.type !== filters.type) return false
             if (filters.is_top !== undefined && record.is_top !== filters.is_top) return false
             return true
@@ -185,7 +186,7 @@ describe('Property 15: 查询过滤精确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 10 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 5, maxLength: 30 }
         ),
@@ -218,7 +219,7 @@ describe('Property 15: 查询过滤精确性', () => {
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -233,7 +234,7 @@ describe('Property 15: 查询过滤精确性', () => {
 
           // 验证：返回所有符合条件的记录
           const expectedCount = testData.filter(
-            r => r.site_id === siteId && r.status !== StatusEnum.DELETE
+            (r) => r.site_id === siteId && r.status !== StatusEnum.DELETE
           ).length
           expect(results.length).toBe(expectedCount)
         }
@@ -255,7 +256,7 @@ describe('Property 15: 查询过滤精确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 50 }
         ),
@@ -291,13 +292,13 @@ describe('Property 15: 查询过滤精确性', () => {
             filters: {
               channel_id: channelId,
               type: type,
-              is_top: isTop
-            }
+              is_top: isTop,
+            },
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -309,13 +310,9 @@ describe('Property 15: 查询过滤精确性', () => {
               AND type = ? 
               AND is_top = ?
           `
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            channelId,
-            type,
-            isTop
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, channelId, type, isTop) as any[]
 
           // 验证：所有返回的记录必须满足所有过滤条件
           for (const record of results) {
@@ -328,7 +325,7 @@ describe('Property 15: 查询过滤精确性', () => {
 
           // 验证：返回所有符合条件的记录
           const expectedCount = testData.filter(
-            r =>
+            (r) =>
               r.site_id === siteId &&
               r.status !== StatusEnum.DELETE &&
               r.channel_id === channelId &&
@@ -345,9 +342,9 @@ describe('Property 15: 查询过滤精确性', () => {
 
 /**
  * 属性 16: 排序顺序正确性
- * 
+ *
  * **Validates: Requirements 12.2**
- * 
+ *
  * 对于任何带有排序参数的查询，返回的记录必须按指定字段和顺序排列
  */
 
@@ -398,7 +395,7 @@ describe('Property 16: 排序顺序正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 5, maxLength: 30 }
         ),
@@ -431,12 +428,12 @@ describe('Property 16: 排序顺序正确性', () => {
           // 构建查询（升序排序）
           const params: QueryParams = {
             sort: sortField,
-            sortOrder: 'asc'
+            sortOrder: 'asc',
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -452,7 +449,7 @@ describe('Property 16: 排序顺序正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r => r.site_id === siteId && r.status !== StatusEnum.DELETE
+            (r) => r.site_id === siteId && r.status !== StatusEnum.DELETE
           ).length
           expect(results.length).toBe(expectedCount)
         }
@@ -476,7 +473,7 @@ describe('Property 16: 排序顺序正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 5, maxLength: 30 }
         ),
@@ -509,12 +506,12 @@ describe('Property 16: 排序顺序正确性', () => {
           // 构建查询（降序排序）
           const params: QueryParams = {
             sort: sortField,
-            sortOrder: 'desc'
+            sortOrder: 'desc',
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -530,7 +527,7 @@ describe('Property 16: 排序顺序正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r => r.site_id === siteId && r.status !== StatusEnum.DELETE
+            (r) => r.site_id === siteId && r.status !== StatusEnum.DELETE
           ).length
           expect(results.length).toBe(expectedCount)
         }
@@ -554,7 +551,7 @@ describe('Property 16: 排序顺序正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 40 }
         ),
@@ -592,12 +589,12 @@ describe('Property 16: 排序顺序正确性', () => {
           const params: QueryParams = {
             filters: { type: typeFilter },
             sort: sortField,
-            sortOrder: sortOrder as 'asc' | 'desc'
+            sortOrder: sortOrder as 'asc' | 'desc',
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -619,7 +616,7 @@ describe('Property 16: 排序顺序正确性', () => {
           for (let i = 1; i < results.length; i++) {
             const prev = results[i - 1][sortField]
             const curr = results[i][sortField]
-            
+
             if (sortOrder === 'asc') {
               expect(prev).toBeLessThanOrEqual(curr)
             } else {
@@ -629,7 +626,7 @@ describe('Property 16: 排序顺序正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r => r.site_id === siteId && r.status !== StatusEnum.DELETE && r.type === typeFilter
+            (r) => r.site_id === siteId && r.status !== StatusEnum.DELETE && r.type === typeFilter
           ).length
           expect(results.length).toBe(expectedCount)
         }
@@ -653,7 +650,7 @@ describe('Property 16: 排序顺序正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 3 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 5, maxLength: 20 }
         ),
@@ -686,12 +683,12 @@ describe('Property 16: 排序顺序正确性', () => {
           // 构建查询（按标题排序）
           const params: QueryParams = {
             sort: 'title',
-            sortOrder: sortOrder as 'asc' | 'desc'
+            sortOrder: sortOrder as 'asc' | 'desc',
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -703,7 +700,7 @@ describe('Property 16: 排序顺序正确性', () => {
           for (let i = 1; i < results.length; i++) {
             const prev = results[i - 1].title
             const curr = results[i].title
-            
+
             if (sortOrder === 'asc') {
               // 使用字符串比较运算符，与 SQLite 的二进制排序一致
               expect(prev <= curr).toBe(true)
@@ -720,9 +717,9 @@ describe('Property 16: 排序顺序正确性', () => {
 
 /**
  * 属性 17: 搜索结果相关性
- * 
+ *
  * **Validates: Requirements 12.4**
- * 
+ *
  * 对于任何带有搜索参数的查询，返回的所有记录必须在指定的搜索字段中包含搜索词（模糊匹配）
  */
 
@@ -778,7 +775,7 @@ describe('Property 17: 搜索结果相关性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 30 }
         ),
@@ -833,12 +830,12 @@ describe('Property 17: 搜索结果相关性', () => {
           // 构建查询（搜索标题和描述字段）
           const params: QueryParams = {
             search: searchTerm,
-            searchFields: ['title', 'description']
+            searchFields: ['title', 'description'],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -849,18 +846,15 @@ describe('Property 17: 搜索结果相关性', () => {
               AND (title LIKE ? OR description LIKE ?)
           `
           const searchPattern = `%${searchTerm}%`
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            searchPattern,
-            searchPattern
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, searchPattern, searchPattern) as any[]
 
           // 验证：所有返回的记录必须在搜索字段中包含搜索词
           for (const record of results) {
             const titleMatch = record.title.toLowerCase().includes(searchTerm.toLowerCase())
             const descMatch = record.description.toLowerCase().includes(searchTerm.toLowerCase())
-            
+
             expect(titleMatch || descMatch).toBe(true)
           }
 
@@ -891,7 +885,7 @@ describe('Property 17: 搜索结果相关性', () => {
           `)
 
           const now = Date.now()
-          
+
           // 插入小写版本
           insertStmt.run(
             `This is a ${searchTerm.toLowerCase()} title`,
@@ -940,12 +934,12 @@ describe('Property 17: 搜索结果相关性', () => {
           // 构建查询
           const params: QueryParams = {
             search: searchTerm,
-            searchFields: ['title']
+            searchFields: ['title'],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -956,11 +950,9 @@ describe('Property 17: 搜索结果相关性', () => {
               AND title LIKE ?
           `
           const searchPattern = `%${searchTerm}%`
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            searchPattern
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, searchPattern) as any[]
 
           // 验证：应该找到所有三个记录（不区分大小写）
           // 注意：SQLite 的 LIKE 默认是不区分大小写的
@@ -982,7 +974,7 @@ describe('Property 17: 搜索结果相关性', () => {
         // 生成站点ID
         fc.integer({ min: 1, max: 5 }),
         // 生成搜索词
-        fc.string({ minLength: 3, maxLength: 8 }).filter(s => s.trim().length > 0),
+        fc.string({ minLength: 3, maxLength: 8 }).filter((s) => s.trim().length > 0),
         (siteId, searchTerm) => {
           // 清空表
           sqlite.exec('DELETE FROM articles')
@@ -1073,12 +1065,12 @@ describe('Property 17: 搜索结果相关性', () => {
           // 构建查询（搜索多个字段）
           const params: QueryParams = {
             search: searchTerm,
-            searchFields: ['title', 'description', 'content', 'author']
+            searchFields: ['title', 'description', 'content', 'author'],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1089,14 +1081,16 @@ describe('Property 17: 搜索结果相关性', () => {
               AND (title LIKE ? OR description LIKE ? OR content LIKE ? OR author LIKE ?)
           `
           const searchPattern = `%${searchTerm}%`
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            searchPattern,
-            searchPattern,
-            searchPattern,
-            searchPattern
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(
+              siteId,
+              StatusEnum.DELETE,
+              searchPattern,
+              searchPattern,
+              searchPattern,
+              searchPattern
+            ) as any[]
 
           // 验证：应该找到4条记录（不包括不含搜索词的记录）
           expect(results.length).toBe(4)
@@ -1122,7 +1116,7 @@ describe('Property 17: 搜索结果相关性', () => {
         // 生成站点ID
         fc.integer({ min: 1, max: 5 }),
         // 生成搜索词
-        fc.string({ minLength: 3, maxLength: 8 }).filter(s => s.trim().length > 0),
+        fc.string({ minLength: 3, maxLength: 8 }).filter((s) => s.trim().length > 0),
         // 生成过滤条件
         fc.constantFrom('NORMAL', 'HOT', 'MEDIA'),
         (siteId, searchTerm, typeFilter) => {
@@ -1187,12 +1181,12 @@ describe('Property 17: 搜索结果相关性', () => {
           const params: QueryParams = {
             search: searchTerm,
             searchFields: ['title', 'description'],
-            filters: { type: typeFilter }
+            filters: { type: typeFilter },
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1204,13 +1198,9 @@ describe('Property 17: 搜索结果相关性', () => {
               AND (title LIKE ? OR description LIKE ?)
           `
           const searchPattern = `%${searchTerm}%`
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            typeFilter,
-            searchPattern,
-            searchPattern
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, typeFilter, searchPattern, searchPattern) as any[]
 
           // 验证：应该只找到1条记录（同时满足搜索和过滤条件）
           expect(results.length).toBe(1)
@@ -1219,7 +1209,7 @@ describe('Property 17: 搜索结果相关性', () => {
           for (const record of results) {
             expect(record.site_id).toBe(siteId)
             expect(record.type).toBe(typeFilter)
-            
+
             const titleMatch = record.title.toLowerCase().includes(searchTerm.toLowerCase())
             const descMatch = record.description.toLowerCase().includes(searchTerm.toLowerCase())
             expect(titleMatch || descMatch).toBe(true)
@@ -1269,12 +1259,12 @@ describe('Property 17: 搜索结果相关性', () => {
           // 构建查询
           const params: QueryParams = {
             search: searchTerm,
-            searchFields: ['title', 'description', 'content']
+            searchFields: ['title', 'description', 'content'],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1285,13 +1275,9 @@ describe('Property 17: 搜索结果相关性', () => {
               AND (title LIKE ? OR description LIKE ? OR content LIKE ?)
           `
           const searchPattern = `%${searchTerm}%`
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            searchPattern,
-            searchPattern,
-            searchPattern
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, searchPattern, searchPattern, searchPattern) as any[]
 
           // 验证：应该返回空结果
           expect(results.length).toBe(0)
@@ -1304,9 +1290,9 @@ describe('Property 17: 搜索结果相关性', () => {
 
 /**
  * 属性 18: 比较运算符正确性
- * 
+ *
  * **Validates: Requirements 12.5**
- * 
+ *
  * 对于任何带有比较运算符的查询，返回的所有记录必须满足指定的比较条件（gt、lt、gte、lte）
  */
 
@@ -1357,7 +1343,7 @@ describe('Property 18: 比较运算符正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 40 }
         ),
@@ -1389,14 +1375,12 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 构建查询（gt 运算符）
           const params: QueryParams = {
-            comparisons: [
-              { field: 'created_at', operator: 'gt', value: compareValue }
-            ]
+            comparisons: [{ field: 'created_at', operator: 'gt', value: compareValue }],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1406,11 +1390,9 @@ describe('Property 18: 比较运算符正确性', () => {
               AND status != ? 
               AND created_at > ?
           `
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            compareValue
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, compareValue) as any[]
 
           // 验证：所有返回的记录必须满足 gt 条件
           for (const record of results) {
@@ -1421,10 +1403,8 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r =>
-              r.site_id === siteId &&
-              r.status !== StatusEnum.DELETE &&
-              r.created_at > compareValue
+            (r) =>
+              r.site_id === siteId && r.status !== StatusEnum.DELETE && r.created_at > compareValue
           ).length
           expect(results.length).toBe(expectedCount)
         }
@@ -1448,7 +1428,7 @@ describe('Property 18: 比较运算符正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 40 }
         ),
@@ -1480,14 +1460,12 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 构建查询（lt 运算符）
           const params: QueryParams = {
-            comparisons: [
-              { field: 'created_at', operator: 'lt', value: compareValue }
-            ]
+            comparisons: [{ field: 'created_at', operator: 'lt', value: compareValue }],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1497,11 +1475,9 @@ describe('Property 18: 比较运算符正确性', () => {
               AND status != ? 
               AND created_at < ?
           `
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            compareValue
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, compareValue) as any[]
 
           // 验证：所有返回的记录必须满足 lt 条件
           for (const record of results) {
@@ -1512,10 +1488,8 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r =>
-              r.site_id === siteId &&
-              r.status !== StatusEnum.DELETE &&
-              r.created_at < compareValue
+            (r) =>
+              r.site_id === siteId && r.status !== StatusEnum.DELETE && r.created_at < compareValue
           ).length
           expect(results.length).toBe(expectedCount)
         }
@@ -1539,7 +1513,7 @@ describe('Property 18: 比较运算符正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 40 }
         ),
@@ -1571,14 +1545,12 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 构建查询（gte 运算符）
           const params: QueryParams = {
-            comparisons: [
-              { field: 'created_at', operator: 'gte', value: compareValue }
-            ]
+            comparisons: [{ field: 'created_at', operator: 'gte', value: compareValue }],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1588,11 +1560,9 @@ describe('Property 18: 比较运算符正确性', () => {
               AND status != ? 
               AND created_at >= ?
           `
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            compareValue
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, compareValue) as any[]
 
           // 验证：所有返回的记录必须满足 gte 条件
           for (const record of results) {
@@ -1603,10 +1573,8 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r =>
-              r.site_id === siteId &&
-              r.status !== StatusEnum.DELETE &&
-              r.created_at >= compareValue
+            (r) =>
+              r.site_id === siteId && r.status !== StatusEnum.DELETE && r.created_at >= compareValue
           ).length
           expect(results.length).toBe(expectedCount)
         }
@@ -1630,7 +1598,7 @@ describe('Property 18: 比较运算符正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 40 }
         ),
@@ -1662,14 +1630,12 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 构建查询（lte 运算符）
           const params: QueryParams = {
-            comparisons: [
-              { field: 'created_at', operator: 'lte', value: compareValue }
-            ]
+            comparisons: [{ field: 'created_at', operator: 'lte', value: compareValue }],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1679,11 +1645,9 @@ describe('Property 18: 比较运算符正确性', () => {
               AND status != ? 
               AND created_at <= ?
           `
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            compareValue
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, compareValue) as any[]
 
           // 验证：所有返回的记录必须满足 lte 条件
           for (const record of results) {
@@ -1694,10 +1658,8 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r =>
-              r.site_id === siteId &&
-              r.status !== StatusEnum.DELETE &&
-              r.created_at <= compareValue
+            (r) =>
+              r.site_id === siteId && r.status !== StatusEnum.DELETE && r.created_at <= compareValue
           ).length
           expect(results.length).toBe(expectedCount)
         }
@@ -1721,7 +1683,7 @@ describe('Property 18: 比较运算符正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 40 }
         ),
@@ -1756,13 +1718,13 @@ describe('Property 18: 比较运算符正确性', () => {
           const params: QueryParams = {
             comparisons: [
               { field: 'created_at', operator: 'gte', value: minTime },
-              { field: 'created_at', operator: 'lte', value: maxTime }
-            ]
+              { field: 'created_at', operator: 'lte', value: maxTime },
+            ],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1773,12 +1735,9 @@ describe('Property 18: 比较运算符正确性', () => {
               AND created_at >= ?
               AND created_at <= ?
           `
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            minTime,
-            maxTime
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, minTime, maxTime) as any[]
 
           // 验证：所有返回的记录必须满足时间范围条件
           for (const record of results) {
@@ -1790,7 +1749,7 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r =>
+            (r) =>
               r.site_id === siteId &&
               r.status !== StatusEnum.DELETE &&
               r.created_at >= minTime &&
@@ -1818,7 +1777,7 @@ describe('Property 18: 比较运算符正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 15, maxLength: 50 }
         ),
@@ -1853,14 +1812,12 @@ describe('Property 18: 比较运算符正确性', () => {
           // 构建查询（比较运算符 + 过滤条件）
           const params: QueryParams = {
             filters: { type: typeFilter },
-            comparisons: [
-              { field: 'created_at', operator: 'gt', value: compareValue }
-            ]
+            comparisons: [{ field: 'created_at', operator: 'gt', value: compareValue }],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1871,12 +1828,9 @@ describe('Property 18: 比较运算符正确性', () => {
               AND type = ?
               AND created_at > ?
           `
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            typeFilter,
-            compareValue
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, typeFilter, compareValue) as any[]
 
           // 验证：所有返回的记录必须满足所有条件
           for (const record of results) {
@@ -1888,7 +1842,7 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r =>
+            (r) =>
               r.site_id === siteId &&
               r.status !== StatusEnum.DELETE &&
               r.type === typeFilter &&
@@ -1916,7 +1870,7 @@ describe('Property 18: 比较运算符正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 40 }
         ),
@@ -1950,16 +1904,14 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 构建查询（比较运算符 + 排序）
           const params: QueryParams = {
-            comparisons: [
-              { field: 'created_at', operator: 'gt', value: compareValue }
-            ],
+            comparisons: [{ field: 'created_at', operator: 'gt', value: compareValue }],
             sort: 'created_at',
-            sortOrder: sortOrder as 'asc' | 'desc'
+            sortOrder: sortOrder as 'asc' | 'desc',
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -1970,11 +1922,9 @@ describe('Property 18: 比较运算符正确性', () => {
               AND created_at > ?
             ORDER BY created_at ${sortOrder.toUpperCase()}
           `
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            compareValue
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, compareValue) as any[]
 
           // 验证：所有返回的记录必须满足比较条件
           for (const record of results) {
@@ -1997,10 +1947,8 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r =>
-              r.site_id === siteId &&
-              r.status !== StatusEnum.DELETE &&
-              r.created_at > compareValue
+            (r) =>
+              r.site_id === siteId && r.status !== StatusEnum.DELETE && r.created_at > compareValue
           ).length
           expect(results.length).toBe(expectedCount)
         }
@@ -2024,7 +1972,7 @@ describe('Property 18: 比较运算符正确性', () => {
             is_top: fc.integer({ min: 0, max: 1 }),
             site_id: fc.integer({ min: 1, max: 5 }),
             created_at: fc.integer({ min: 1000000000, max: 2000000000 }),
-            update_at: fc.integer({ min: 1000000000, max: 2000000000 })
+            update_at: fc.integer({ min: 1000000000, max: 2000000000 }),
           }),
           { minLength: 10, maxLength: 40 }
         ),
@@ -2056,14 +2004,12 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 构建查询（对 channel_id 应用比较运算符）
           const params: QueryParams = {
-            comparisons: [
-              { field: 'channel_id', operator: 'gte', value: channelIdThreshold }
-            ]
+            comparisons: [{ field: 'channel_id', operator: 'gte', value: channelIdThreshold }],
           }
 
           const queryResult = buildQuery(params, {
             siteId,
-            tableColumns: articles
+            tableColumns: articles,
           })
 
           // 执行查询
@@ -2073,11 +2019,9 @@ describe('Property 18: 比较运算符正确性', () => {
               AND status != ? 
               AND channel_id >= ?
           `
-          const results = sqlite.prepare(query).all(
-            siteId,
-            StatusEnum.DELETE,
-            channelIdThreshold
-          ) as any[]
+          const results = sqlite
+            .prepare(query)
+            .all(siteId, StatusEnum.DELETE, channelIdThreshold) as any[]
 
           // 验证：所有返回的记录必须满足条件
           for (const record of results) {
@@ -2088,7 +2032,7 @@ describe('Property 18: 比较运算符正确性', () => {
 
           // 验证：返回的记录数量正确
           const expectedCount = testData.filter(
-            r =>
+            (r) =>
               r.site_id === siteId &&
               r.status !== StatusEnum.DELETE &&
               r.channel_id >= channelIdThreshold

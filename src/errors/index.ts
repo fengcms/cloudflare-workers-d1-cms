@@ -96,8 +96,8 @@ export function toErrorResponse(error: AppError) {
     success: false,
     error: {
       code: error.code || 'UNKNOWN_ERROR',
-      message: error.message
-    }
+      message: error.message,
+    },
   }
 
   // 如果是 ValidationError，添加 details 字段

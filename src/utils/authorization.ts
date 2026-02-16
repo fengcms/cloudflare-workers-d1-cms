@@ -10,7 +10,7 @@ const roleHierarchy: Record<UserTypeEnum, number> = {
   [UserTypeEnum.SUPERMANAGE]: 4,
   [UserTypeEnum.MANAGE]: 3,
   [UserTypeEnum.EDITOR]: 2,
-  [UserTypeEnum.USER]: 1
+  [UserTypeEnum.USER]: 1,
 }
 
 /**
@@ -22,7 +22,7 @@ const roleHierarchy: Record<UserTypeEnum, number> = {
 export function checkPermission(userRole: UserTypeEnum, requiredRole: UserTypeEnum): boolean {
   const userLevel = roleHierarchy[userRole]
   const requiredLevel = roleHierarchy[requiredRole]
-  
+
   return userLevel >= requiredLevel
 }
 
@@ -44,7 +44,7 @@ export function getRoleLevel(role: UserTypeEnum): number {
 export function compareRoles(role1: UserTypeEnum, role2: UserTypeEnum): number {
   const level1 = roleHierarchy[role1]
   const level2 = roleHierarchy[role2]
-  
+
   if (level1 > level2) return 1
   if (level1 < level2) return -1
   return 0

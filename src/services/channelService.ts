@@ -1,23 +1,18 @@
 /**
  * Channel Service
- * 
+ *
  * 管理频道的 CRUD 操作和层级树结构。
  * 实现父频道验证、软删除和缓存功能。
- * 
+ *
  * **验证需求**: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
  */
 
-import { eq, and } from 'drizzle-orm'
-import { DrizzleD1Database } from 'drizzle-orm/d1'
-import { channels, StatusEnum, ChannelTypeEnum } from '../db/schema'
-import { 
-  Channel, 
-  ChannelTree,
-  CreateChannelInput, 
-  UpdateChannelInput
-} from '../types'
-import { CacheManager } from './cacheManager'
+import { and, eq } from 'drizzle-orm'
+import type { DrizzleD1Database } from 'drizzle-orm/d1'
+import { ChannelTypeEnum, channels, StatusEnum } from '../db/schema'
 import { NotFoundError, ValidationError } from '../errors'
+import type { Channel, ChannelTree, CreateChannelInput, UpdateChannelInput } from '../types'
+import type { CacheManager } from './cacheManager'
 
 export class ChannelService {
   constructor(
@@ -27,14 +22,14 @@ export class ChannelService {
 
   /**
    * 创建频道
-   * 
+   *
    * 如果提供 pid，验证父频道存在且未被删除。
    * 创建后使缓存失效。
-   * 
+   *
    * @param data - 频道创建数据
    * @param siteId - 站点ID
    * @returns 创建的频道
-   * 
+   *
    * **验证需求**: 3.1, 3.2
    */
   async create(data: CreateChannelInput, siteId: number): Promise<Channel> {
@@ -62,7 +57,7 @@ export class ChannelService {
         img: data.img ?? '',
         site_id: siteId,
         created_at: now,
-        update_at: now
+        update_at: now,
       })
       .returning()
 
@@ -74,16 +69,16 @@ export class ChannelService {
 
   /**
    * 更新频道
-   * 
+   *
    * 如果更新 pid，验证父频道存在。
    * 不更新已删除的频道。
    * 更新后使缓存失效。
-   * 
+   *
    * @param id - 频道ID
    * @param data - 频道更新数据
    * @param siteId - 站点ID
    * @returns 更新后的频道
-   * 
+   *
    * **验证需求**: 3.2, 3.4
    */
   async update(id: number, data: UpdateChannelInput, siteId: number): Promise<Channel> {
@@ -119,7 +114,7 @@ export class ChannelService {
 
     // 准备更新数据
     const updateData: any = {
-      update_at: new Date()
+      update_at: new Date(),
     }
 
     if (data.name !== undefined) updateData.name = data.name
@@ -146,13 +141,13 @@ export class ChannelService {
 
   /**
    * 软删除频道
-   * 
+   *
    * 将 status 设置为 StatusEnum.DELETE，更新 update_at。
    * 删除后使缓存失效。
-   * 
+   *
    * @param id - 频道ID
    * @param siteId - 站点ID
-   * 
+   *
    * **验证需求**: 3.4
    */
   async delete(id: number, siteId: number): Promise<void> {
@@ -162,14 +157,9 @@ export class ChannelService {
       .update(channels)
       .set({
         status: StatusEnum.DELETE,
-        update_at: now
+        update_at: now,
       })
-      .where(
-        and(
-          eq(channels.id, id),
-          eq(channels.site_id, siteId)
-        )
-      )
+      .where(and(eq(channels.id, id), eq(channels.site_id, siteId)))
       .returning()
 
     if (result.length === 0) {
@@ -182,14 +172,14 @@ export class ChannelService {
 
   /**
    * 获取频道树
-   * 
+   *
    * 构建层级树结构，按 sort 字段升序排列。
    * 使用缓存（缓存键：site:{siteId}:channels:tree）。
    * 如果缓存不存在，从数据库查询并构建树。
-   * 
+   *
    * @param siteId - 站点ID
    * @returns 频道树数组
-   * 
+   *
    * **验证需求**: 3.3, 3.5, 3.6
    */
   async getTree(siteId: number): Promise<ChannelTree[]> {
@@ -206,12 +196,7 @@ export class ChannelService {
     const allChannels = await this.db
       .select()
       .from(channels)
-      .where(
-        and(
-          eq(channels.site_id, siteId),
-          eq(channels.status, StatusEnum.NORMAL)
-        )
-      )
+      .where(and(eq(channels.site_id, siteId), eq(channels.status, StatusEnum.NORMAL)))
       .orderBy(channels.sort)
       .all()
 
@@ -226,13 +211,13 @@ export class ChannelService {
 
   /**
    * 验证父频道是否存在
-   * 
+   *
    * 检查父频道在指定站点内是否存在且未被删除。
-   * 
+   *
    * @param pid - 父频道ID
    * @param siteId - 站点ID
    * @returns true 表示父频道有效，false 表示不存在或已删除
-   * 
+   *
    * **验证需求**: 3.2
    */
   async validateParent(pid: number, siteId: number): Promise<boolean> {
@@ -253,13 +238,13 @@ export class ChannelService {
 
   /**
    * 构建层级树结构
-   * 
+   *
    * 递归构建频道树，支持无限嵌套深度。
-   * 
+   *
    * @param allChannels - 所有频道列表
    * @param parentId - 父频道ID
    * @returns 频道树数组
-   * 
+   *
    * **验证需求**: 3.3, 3.5
    */
   private buildTree(allChannels: Channel[], parentId: number): ChannelTree[] {
@@ -269,7 +254,7 @@ export class ChannelService {
       if (channel.pid === parentId) {
         const node: ChannelTree = {
           ...channel,
-          children: this.buildTree(allChannels, channel.id)
+          children: this.buildTree(allChannels, channel.id),
         }
         tree.push(node)
       }
@@ -280,9 +265,9 @@ export class ChannelService {
 
   /**
    * 使频道缓存失效
-   * 
+   *
    * 删除指定站点的频道树缓存。
-   * 
+   *
    * @param siteId - 站点ID
    */
   private async invalidateCache(siteId: number): Promise<void> {
